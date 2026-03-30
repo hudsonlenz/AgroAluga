@@ -3,44 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Título e descrição -->
     <title>AgroAluga</title>
     <meta name="description" content="Plataforma de aluguel de máquinas e equipamentos agrícolas" />
-
-    <!-- Open Graph (preview ao compartilhar) -->
     <meta property="og:title" content="AgroAluga" />
     <meta property="og:description" content="Plataforma de aluguel de máquinas e equipamentos agrícolas" />
     <meta property="og:url" content="https://hudsonlenz.github.io/AgroAluga/" />
     <meta property="og:type" content="website" />
-
-    <!-- Opcional: imagem de preview (recomendado 1200x630px) -->
     <meta property="og:image" content="https://hudsonlenz.github.io/AgroAluga/AGROALUGA.jpg" />
-    <!-- <meta property="og:image" content="https://hudsonlenz.github.io/AgroAluga/preview.png" /> -->
-
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <script>
-  (function(l) {
-    if (l.search[1] === '/') {
-      var decoded = l.search.slice(1).split('&').map(function(s) {
-        return s.replace(/~and~/g, '&')
-      }).join('?');
-      window.history.replaceState(null, null,
-        l.pathname.slice(0, -1) + decoded + l.hash
-      );
-    }
-  }(window.location))
-</script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-Para ter imagem de preview também
-Crie uma imagem de 1200x630px do seu site
-Salve como preview.png na pasta public/
-Descomente a linha og:image acima
-Depois é só commitar e o preview vai aparecer com as informações do AgroAluga!
-
-
