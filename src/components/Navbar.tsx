@@ -53,6 +53,9 @@ export default function Navbar() {
               )}
               <Link to="/perfil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <UserAvatar userId={user.id} name={user.name} size="sm" />
+                <span className="text-sm text-primary-foreground font-medium">
+                  {user.name.split(" ")[0]}
+                </span>
               </Link>
               <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={() => logout()}>
                 Sair
