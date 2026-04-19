@@ -109,7 +109,7 @@ export const SERVICE_CATEGORIES = [
   "Outros Servicos",
 ];
 
-const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];
+export const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
@@ -266,4 +266,4 @@ export function useApp() {
   return ctx;
 }
 
-export { CATEGORIES };
+// CATEGORIES exportado acima como export const
