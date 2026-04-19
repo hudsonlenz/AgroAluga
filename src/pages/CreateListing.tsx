@@ -29,6 +29,14 @@ export default function CreateListing() {
   const [loading, setLoading] = useState(false);
 
   if (!user) return <Navigate to="/login" />;
+  if (user.blocked) return (
+    <div className="container mx-auto px-4 py-20 text-center">
+      <div className="max-w-md mx-auto bg-destructive/10 border border-destructive/20 rounded-lg p-8">
+        <h2 className="text-xl font-heading font-bold text-destructive mb-2">Conta bloqueada</h2>
+        <p className="text-muted-foreground">Sua conta foi bloqueada e nao pode criar novos anuncios. Entre em contato com o suporte: agroaluga@outlook.com</p>
+      </div>
+    </div>
+  );
 
   const categories = listingType === "equipamento" ? EQUIPMENT_CATEGORIES : SERVICE_CATEGORIES;
 

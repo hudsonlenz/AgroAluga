@@ -136,6 +136,10 @@ export default function MessagesPage() {
 
   async function sendMessage() {
     if (!input.trim()) return;
+    if (user?.blocked) {
+      alert("Sua conta esta bloqueada e nao pode enviar mensagens.");
+      return;
+    }
     const content = input.trim();
     setInput("");
 

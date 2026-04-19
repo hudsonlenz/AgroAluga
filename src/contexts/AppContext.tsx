@@ -182,6 +182,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }
 
+  async function mapAndEnrichUser(u: NonNullable<Session["user"]>): Promise<User> {
+    const m = u.user_metadata || {};
+    const { data: profile } = await supabase.from("profiles").select("blocked").eq("id", u.id).single();
+    return {
+      id: u.id,
+      name: m.name || u.email?.split("@")[0] || "Usuario",
+      email: u.email || "",
+      phone: m.phone || "",
+      city: m.city || "",
+      state: m.state || "",
+      accountType: m.accountType || "contractor",
+      blocked: profile?.blocked || false,
+    };
+  }
+
   function mapSupabaseUser(u: NonNullable<Session["user"]>): User {
     const m = u.user_metadata || {};
     return {
@@ -192,6 +207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       city: m.city || "",
       state: m.state || "",
       accountType: m.accountType || "contractor",
+      blocked: false,
     };
   }
 

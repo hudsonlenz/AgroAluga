@@ -15,6 +15,10 @@ export default function ChatButton({ listingId, sellerId }: ChatButtonProps) {
   const handleStartChat = () => {
     if (!user) { navigate("/login"); return; }
     if (user.id === sellerId) return;
+    if (user.blocked) {
+      alert("Sua conta esta bloqueada e nao pode enviar mensagens.");
+      return;
+    }
     // Passa o listingId e sellerId como parâmetros na URL
     navigate(`/mensagens?listing=${listingId}&seller=${sellerId}`);
   };
