@@ -25,6 +25,8 @@ export interface Listing {
   views: number;
   contactsRevealed: number;
   createdAt: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface User {
@@ -141,6 +143,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       views: row.views || 0,
       contactsRevealed: row.contacts_revealed || 0,
       createdAt: row.created_at,
+      latitude: row.latitude,
+      longitude: row.longitude,
     };
   }
 
