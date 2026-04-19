@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, MessageCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StarRating from "@/components/StarRating";
 import ChatButton from "@/components/ChatButton";
+import UserAvatar from "@/components/UserAvatar";
 import { useState } from "react";
 
 export default function ListingDetail() {
@@ -87,7 +88,7 @@ export default function ListingDetail() {
                 <span className="text-xs text-muted-foreground">({listing.reviewCount})</span>
               </div>
             )}
-            <p className="text-sm text-muted-foreground text-center">Fornecedor: {listing.ownerName}</p>
+            
 
             {/* Botão de chat */}
             <ChatButton listingId={listing.id} sellerId={listing.ownerId} />
@@ -95,6 +96,10 @@ export default function ListingDetail() {
             {/* Botão de contato */}
             {revealed ? (
               <div className="space-y-2 bg-primary/5 p-4 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <UserAvatar userId={listing.ownerId} name={listing.ownerName} size="md" />
+                  <p className="font-semibold text-sm">{listing.ownerName}</p>
+                </div>
                 <p className="text-xs font-medium text-primary uppercase">Contato do fornecedor</p>
                 {listing.phone && <div className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /> {listing.phone}</div>}
                 {listing.whatsapp && <div className="flex items-center gap-2 text-sm"><MessageCircle className="h-4 w-4 text-primary" /> {listing.whatsapp}</div>}
