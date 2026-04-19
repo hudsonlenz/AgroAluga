@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { MapPin, Phone, Mail, MessageCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export default function ListingDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { listings, reviews, revealedContacts, revealContact, user } = useApp();
   const listing = listings.find((l) => l.id === id);
   const [contactVisible, setContactVisible] = useState(false);
@@ -90,7 +91,7 @@ export default function ListingDetail() {
             ) : (
               <Button
                 className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-                onClick={() => { setContactVisible(true); revealContact(listing.id); }}
+                onClick={() => { if (!user) { navigate("/login"); return; } setContactVisible(true); revealContact(listing.id); }}
               >
                 Ver contato gratuitamente
               </Button>
