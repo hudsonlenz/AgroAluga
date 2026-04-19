@@ -89,7 +89,7 @@ export default function CreateListing() {
         ownerId: user.id,
         ownerName: user.name,
         featured: false,
-        status: "active",
+        status: "pending",
       } as any);
       navigate("/dashboard");
     } catch (e) {
