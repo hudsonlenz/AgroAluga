@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
 export default function CreateListing() {
   const { user, addListing } = useApp();
@@ -18,6 +18,7 @@ export default function CreateListing() {
     availability: ["Seg", "Ter", "Qua", "Qui", "Sex"] as string[],
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!user) return <Navigate to="/login" />;
 
@@ -29,45 +30,49 @@ export default function CreateListing() {
       : [...p.availability, d],
   }));
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!form.title || !form.category || !form.description || !form.price) {
-      setError("Preencha todos os campos obrigatórios.");
+      setError("Preencha todos os campos obrigatorios.");
       return;
     }
     setError("");
-    addListing({
-      title: form.title,
-      category: form.category,
-      description: form.description,
-      price: parseFloat(form.price),
-      priceUnit: form.priceUnit,
-      city: user.city,
-      state: user.state,
-      distance: 0,
-      rating: 0,
-      reviewCount: 0,
-      images: ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"],
-      availability: form.availability,
-      phone: form.phone || user.phone,
-      whatsapp: form.whatsapp || user.phone,
-      email: form.email || user.email,
-      ownerId: user.id,
-      ownerName: user.name,
-      featured: false,
-      status: "active",
-    });
-    navigate("/dashboard");
+    setLoading(true);
+    try {
+      await addListing({
+        title: form.title,
+        category: form.category,
+        description: form.description,
+        price: parseFloat(form.price),
+        priceUnit: form.priceUnit,
+        city: user.city,
+        state: user.state,
+        images: ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"],
+        availability: form.availability,
+        phone: form.phone || user.phone,
+        whatsapp: form.whatsapp || user.phone,
+        email: form.email || user.email,
+        ownerId: user.id,
+        ownerName: user.name,
+        featured: false,
+        status: "active",
+      });
+      navigate("/dashboard");
+    } catch (e) {
+      setError("Erro ao publicar. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-2xl font-heading font-bold mb-2">Criar Anúncio</h1>
-      <p className="text-sm text-muted-foreground mb-6">Publicação gratuita — sem custo para anunciar.</p>
+      <h1 className="text-2xl font-heading font-bold mb-2">Criar Anuncio</h1>
+      <p className="text-sm text-muted-foreground mb-6">Publicacao gratuita — sem custo para anunciar.</p>
       <div className="bg-card border border-border rounded-lg p-6 space-y-5">
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div>
-          <label className="text-sm font-medium mb-1 block">Título do serviço *</label>
-          <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Ex: Aluguel de Trator — Ribeirão Preto" />
+          <label className="text-sm font-medium mb-1 block">Titulo do servico *</label>
+          <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Ex: Aluguel de Trator — Ribeirao Preto" />
         </div>
         <div>
           <label className="text-sm font-medium mb-1 block">Categoria *</label>
@@ -77,12 +82,12 @@ export default function CreateListing() {
           </Select>
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Descrição *</label>
-          <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4} placeholder="Descreva o serviço ou equipamento..." />
+          <label className="text-sm font-medium mb-1 block">Descricao *</label>
+          <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4} placeholder="Descreva o servico ou equipamento..." />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-medium mb-1 block">Preço *</label>
+            <label className="text-sm font-medium mb-1 block">Preco *</label>
             <Input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="150" />
           </div>
           <div>
@@ -90,19 +95,10 @@ export default function CreateListing() {
             <Select value={form.priceUnit} onValueChange={(v) => set("priceUnit", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {["por hora", "por hectare", "por km", "por diária"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {["por hora", "por hectare", "por km", "por diaria"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div>
-          <label className="text-sm font-medium mb-1 block">Raio de atendimento</label>
-          <Select value={form.radius} onValueChange={(v) => set("radius", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {["10", "25", "50", "100"].map((r) => <SelectItem key={r} value={r}>{r} km</SelectItem>)}
-            </SelectContent>
-          </Select>
         </div>
         <div>
           <label className="text-sm font-medium mb-2 block">Disponibilidade</label>
@@ -120,8 +116,12 @@ export default function CreateListing() {
           <Input placeholder="WhatsApp" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
           <Input placeholder="E-mail" value={form.email} onChange={(e) => set("email", e.target.value)} />
         </div>
-        <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12 text-base" onClick={handlePublish}>
-          Publicar gratuitamente
+        <Button
+          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12 text-base"
+          onClick={handlePublish}
+          disabled={loading}
+        >
+          {loading ? "Publicando..." : "Publicar gratuitamente"}
         </Button>
       </div>
     </div>
