@@ -71,9 +71,11 @@ export default function AdminPage() {
 
   // Growth data state
   const [growthData, setGrowthData] = useState<any[]>([]);
+  const [growthPeriod, setGrowthPeriod] = useState(30);
 
   // Growth data state
   const [growthData, setGrowthData] = useState<any[]>([]);
+  const [growthPeriod, setGrowthPeriod] = useState(30);
 
   // KPIs state
   const [kpis, setKpis] = useState<KPIs | null>(null);
@@ -95,30 +97,29 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => { checkAdmin(); }, [user]);
-  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); fetchGrowthData(); } }, [isAdmin, statusFilter]);
+  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); } }, [isAdmin, statusFilter]);
+  useEffect(() => { if (isAdmin) fetchGrowthData(); }, [isAdmin, growthPeriod]);
 
   async function fetchGrowthData() {
-    const { data } = await supabase
-      .from("admin_daily_growth")
-      .select("*")
-      .order("day", { ascending: true });
+    const { data } = await supabase.rpc("get_growth_data", { days_back: growthPeriod });
     if (data) {
       setGrowthData(data.map((d: any) => ({
         ...d,
-        day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        day: growthPeriod <= 90
+          ? new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
+          : new Date(d.day).toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" }),
       })));
     }
   }
 
   async function fetchGrowthData() {
-    const { data } = await supabase
-      .from("admin_daily_growth")
-      .select("*")
-      .order("day", { ascending: true });
+    const { data } = await supabase.rpc("get_growth_data", { days_back: growthPeriod });
     if (data) {
       setGrowthData(data.map((d: any) => ({
         ...d,
-        day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        day: growthPeriod <= 90
+          ? new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
+          : new Date(d.day).toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" }),
       })));
     }
   }
@@ -374,10 +375,29 @@ export default function AdminPage() {
               {/* Coluna de Gráficos */}
               <div className="md:col-span-3 space-y-6">
 
+                {/* Seletor de período */}
+                <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-3">
+                  <span className="text-sm font-medium text-muted-foreground mr-2">Periodo:</span>
+                  {[
+                    { label: "30 dias", value: 30 },
+                    { label: "90 dias", value: 90 },
+                    { label: "1 ano", value: 365 },
+                    { label: "Tudo", value: 1825 },
+                  ].map((p) => (
+                    <button
+                      key={p.value}
+                      onClick={() => setGrowthPeriod(p.value)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${growthPeriod === p.value ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Crescimento de usuários */}
                 <div className="bg-card border border-border rounded-lg p-5">
                   <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-primary" /> Crescimento de Usuarios (30 dias)
+                    <TrendingUp className="h-4 w-4 text-primary" /> Crescimento de Usuarios
                   </h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={growthData}>
@@ -394,7 +414,7 @@ export default function AdminPage() {
                 {/* Crescimento de anúncios */}
                 <div className="bg-card border border-border rounded-lg p-5">
                   <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
-                    <LayoutList className="h-4 w-4 text-primary" /> Anuncios Publicados (30 dias)
+                    <LayoutList className="h-4 w-4 text-primary" /> Anuncios Publicados
                   </h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={growthData}>
@@ -411,7 +431,7 @@ export default function AdminPage() {
                 {/* Mensagens e conversas */}
                 <div className="bg-card border border-border rounded-lg p-5">
                   <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-primary" /> Engajamento Diario (30 dias)
+                    <MessageCircle className="h-4 w-4 text-primary" /> Engajamento Diario
                   </h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={growthData}>
