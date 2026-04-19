@@ -3,7 +3,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppProvider } from "@/contexts/AppContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -24,6 +24,46 @@ import ComoFunciona from "./pages/ComoFunciona";
 import Beneficios from "./pages/Beneficios";
 
 const queryClient = new QueryClient();
+
+function AppContent() {
+  const { authLoading } = useApp();
+  if (authLoading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      </div>
+    </div>
+  );
+  return (
+    <HashRouter>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/busca" element={<SearchPage />} />
+            <Route path="/anuncio/:id" element={<ListingDetail />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cadastro" element={<RegisterPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/criar-anuncio" element={<CreateListing />} />
+            <Route path="/como-funciona" element={<ComoFunciona />} />
+            <Route path="/beneficios" element={<Beneficios />} />
+            <Route path="/mensagens" element={<MessagesPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/editar-anuncio/:id" element={<EditListing />} />
+            <Route path="/termos" element={<TermosPage />} />
+            <Route path="/privacidade" element={<PrivacidadePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </HashRouter>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
