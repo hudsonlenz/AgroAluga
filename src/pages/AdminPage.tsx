@@ -3,7 +3,10 @@ import { Navigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Check, X, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, X, Eye, Users, LayoutList, Search, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import UserAvatar from "@/components/UserAvatar";
 
 interface PendingListing {
   id: string;
@@ -16,53 +19,84 @@ interface PendingListing {
   state: string;
   images: string[];
   owner_name: string;
+  owner_id: string;
+  owner_email: string;
   created_at: string;
   status: string;
-  owner_email: string;
+  listing_type: string;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email?: string;
+  phone: string;
+  city: string;
+  state: string;
+  account_type: string;
+  user_code: string;
+  created_at: string;
+  is_admin: boolean;
 }
 
 export default function AdminPage() {
-  const { user, authLoading } = useApp();
+  const { user } = useApp();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState<"listings" | "users">("listings");
+
+  // Listings state
   const [listings, setListings] = useState<PendingListing[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(true);
   const [selected, setSelected] = useState<PendingListing | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
   const [processing, setProcessing] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"pending" | "active" | "rejected">("pending");
+  const [statusFilter, setStatusFilter] = useState<"pending" | "active" | "paused" | "rejected">("pending");
+  const [userFilter, setUserFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
-  useEffect(() => {
-    checkAdmin();
-  }, [user]);
+  // Users state
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [userSearch, setUserSearch] = useState("");
 
-  useEffect(() => {
-    if (isAdmin) fetchListings();
-  }, [isAdmin, filter]);
+  useEffect(() => { checkAdmin(); }, [user]);
+  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); } }, [isAdmin, statusFilter]);
 
   async function checkAdmin() {
     if (!user) { setIsAdmin(false); return; }
-    const { data } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
+    const { data } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
     setIsAdmin(data?.is_admin || false);
   }
 
   async function fetchListings() {
-    setLoading(true);
+    setListingsLoading(true);
     const { data } = await supabase
       .from("listings")
       .select("*")
-      .eq("status", filter)
+      .eq("status", statusFilter)
       .order("created_at", { ascending: false });
     if (data) setListings(data);
-    setLoading(false);
+    setListingsLoading(false);
+  }
+
+  async function fetchUsers() {
+    setUsersLoading(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setUsers(data);
+    setUsersLoading(false);
   }
 
   async function approve(id: string) {
     setProcessing(id);
+    const listing = listings.find((l) => l.id === id);
     await supabase.from("listings").update({ status: "active" }).eq("id", id);
+    if (listing) {
+      await supabase.functions.invoke("notify-listing-status", {
+        body: { listing_title: listing.title, owner_email: listing.owner_email, owner_name: listing.owner_name, status: "active" },
+      });
+    }
     setListings((prev) => prev.filter((l) => l.id !== id));
     if (selected?.id === id) setSelected(null);
     setProcessing(null);
@@ -70,14 +104,36 @@ export default function AdminPage() {
 
   async function reject(id: string) {
     setProcessing(id);
+    const listing = listings.find((l) => l.id === id);
     await supabase.from("listings").update({ status: "rejected" }).eq("id", id);
+    if (listing) {
+      await supabase.functions.invoke("notify-listing-status", {
+        body: { listing_title: listing.title, owner_email: listing.owner_email, owner_name: listing.owner_name, status: "rejected" },
+      });
+    }
     setListings((prev) => prev.filter((l) => l.id !== id));
     if (selected?.id === id) setSelected(null);
-    setRejectReason("");
     setProcessing(null);
   }
 
-  if (authLoading) return null;
+  async function toggleAdmin(userId: string, current: boolean) {
+    await supabase.from("profiles").update({ is_admin: !current }).eq("id", userId);
+    setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, is_admin: !current } : u));
+  }
+
+  const filteredListings = listings.filter((l) => {
+    const matchUser = userFilter === "" || l.owner_name.toLowerCase().includes(userFilter.toLowerCase()) || l.owner_email?.toLowerCase().includes(userFilter.toLowerCase());
+    const matchType = typeFilter === "all" || l.listing_type === typeFilter;
+    return matchUser && matchType;
+  });
+
+  const filteredUsers = users.filter((u) =>
+    userSearch === "" ||
+    u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.user_code?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.city?.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
   if (!user) return <Navigate to="/login" />;
   if (isAdmin === false) return <Navigate to="/" />;
   if (isAdmin === null) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Verificando permissoes...</div>;
@@ -87,111 +143,229 @@ export default function AdminPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-heading font-bold">Painel Admin</h1>
-          <p className="text-sm text-muted-foreground">Moderacao de anuncios</p>
+          <p className="text-sm text-muted-foreground">Gestao completa da plataforma</p>
         </div>
-        <div className="flex gap-2">
-          {(["pending", "active", "rejected"] as const).map((s) => (
-            <Button
-              key={s}
-              variant={filter === s ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(s)}
-              className={filter === s ? "bg-primary text-primary-foreground" : ""}
-            >
-              {s === "pending" ? "Pendentes" : s === "active" ? "Aprovados" : "Rejeitados"}
-            </Button>
-          ))}
+        <div className="flex gap-2 bg-secondary rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab("listings")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "listings" ? "bg-card shadow text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <LayoutList className="h-4 w-4" /> Anuncios
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "users" ? "bg-card shadow text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Users className="h-4 w-4" /> Usuarios
+            <span className="bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded-full">{users.length}</span>
+          </button>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Lista */}
-        <div className="space-y-3">
-          {loading ? (
-            <p className="text-muted-foreground text-sm">Carregando...</p>
-          ) : listings.length === 0 ? (
-            <div className="bg-card border border-border rounded-lg p-8 text-center text-muted-foreground">
-              Nenhum anuncio {filter === "pending" ? "pendente" : filter === "active" ? "aprovado" : "rejeitado"}.
-            </div>
-          ) : listings.map((l) => (
-            <div
-              key={l.id}
-              className={`bg-card border rounded-lg p-4 cursor-pointer transition-all ${selected?.id === l.id ? "border-primary shadow-md" : "border-border hover:border-primary/50"}`}
-              onClick={() => setSelected(l)}
-            >
-              <div className="flex items-center gap-3">
-                <img src={l.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=80&h=80&fit=crop"} alt="" className="h-16 w-16 rounded-md object-cover shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{l.title}</p>
-                  <p className="text-xs text-muted-foreground">{l.category} — {l.city}, {l.state}</p>
-                  <p className="text-xs text-muted-foreground">Por: {l.owner_name}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString("pt-BR")}</p>
-                </div>
-                {filter === "pending" && (
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="outline" className="h-8 w-8 text-green-600 hover:bg-green-50" onClick={(e) => { e.stopPropagation(); approve(l.id); }} disabled={processing === l.id}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="outline" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); reject(l.id); }} disabled={processing === l.id}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Detalhe */}
+      {/* ABA ANÚNCIOS */}
+      {activeTab === "listings" && (
         <div>
-          {selected ? (
-            <div className="bg-card border border-border rounded-lg p-6 space-y-4 sticky top-24">
-              <h2 className="font-heading font-bold text-lg">{selected.title}</h2>
-              <div className="flex flex-wrap gap-2">
-                {selected.images?.map((img, i) => (
-                  <img key={i} src={img} alt="" className="h-24 w-24 rounded-md object-cover" />
-                ))}
+          {/* Filtros */}
+          <div className="flex flex-wrap gap-3 mb-6 bg-card border border-border rounded-lg p-4">
+            <div className="flex gap-2 flex-wrap">
+              {(["pending", "active", "paused", "rejected"] as const).map((s) => (
+                <Button key={s} variant={statusFilter === s ? "default" : "outline"} size="sm"
+                  onClick={() => { setStatusFilter(s); setSelected(null); }}
+                  className={statusFilter === s ? "bg-primary text-primary-foreground" : ""}>
+                  {s === "pending" ? "Pendentes" : s === "active" ? "Ativos" : s === "paused" ? "Pausados" : "Rejeitados"}
+                  {s === "pending" && listings.length > 0 && statusFilter !== "pending" && (
+                    <span className="ml-1 bg-accent text-accent-foreground text-xs px-1.5 rounded-full">{listings.length}</span>
+                  )}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="equipamento">Equipamentos</SelectItem>
+                  <SelectItem value="servico">Servicos</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por usuario..."
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                  className="pl-7 h-8 text-xs w-48"
+                />
               </div>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Categoria:</span> {selected.category}</p>
-                <p><span className="font-medium">Preco:</span> R$ {selected.price}/{selected.price_unit}</p>
-                <p><span className="font-medium">Local:</span> {selected.city}, {selected.state}</p>
-                <p><span className="font-medium">Anunciante:</span> {selected.owner_name}</p>
-              </div>
-              <div>
-                <p className="font-medium text-sm mb-1">Descricao:</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{selected.description}</p>
-              </div>
-              {filter === "pending" && (
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
-                    onClick={() => approve(selected.id)}
-                    disabled={processing === selected.id}
-                  >
-                    <Check className="h-4 w-4" />
-                    {processing === selected.id ? "Aprovando..." : "Aprovar"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 text-destructive border-destructive hover:bg-destructive/10 gap-2"
-                    onClick={() => reject(selected.id)}
-                    disabled={processing === selected.id}
-                  >
-                    <X className="h-4 w-4" />
-                    {processing === selected.id ? "Rejeitando..." : "Rejeitar"}
-                  </Button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Lista */}
+            <div className="space-y-3">
+              {listingsLoading ? (
+                <p className="text-muted-foreground text-sm">Carregando...</p>
+              ) : filteredListings.length === 0 ? (
+                <div className="bg-card border border-border rounded-lg p-8 text-center text-muted-foreground">
+                  Nenhum anuncio encontrado.
+                </div>
+              ) : filteredListings.map((l) => (
+                <div key={l.id}
+                  className={`bg-card border rounded-lg p-4 cursor-pointer transition-all ${selected?.id === l.id ? "border-primary shadow-md" : "border-border hover:border-primary/50"}`}
+                  onClick={() => setSelected(l)}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={l.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=80&h=80&fit=crop"}
+                      alt="" className="h-14 w-14 rounded-md object-cover shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{l.title}</p>
+                      <p className="text-xs text-muted-foreground">{l.category} — {l.city}, {l.state}</p>
+                      <p className="text-xs text-muted-foreground">Por: {l.owner_name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${l.listing_type === "servico" ? "bg-accent/20 text-accent-foreground" : "bg-primary/10 text-primary"}`}>
+                          {l.listing_type === "servico" ? "Servico" : "Equipamento"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                    </div>
+                    {statusFilter === "pending" && (
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-green-600 hover:bg-green-50"
+                          onClick={(e) => { e.stopPropagation(); approve(l.id); }} disabled={processing === l.id}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={(e) => { e.stopPropagation(); reject(l.id); }} disabled={processing === l.id}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Detalhe */}
+            <div>
+              {selected ? (
+                <div className="bg-card border border-border rounded-lg p-6 space-y-4 sticky top-24">
+                  <h2 className="font-heading font-bold text-lg">{selected.title}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.images?.map((img, i) => (
+                      <img key={i} src={img} alt="" className="h-24 w-24 rounded-md object-cover" />
+                    ))}
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Tipo:</span> {selected.listing_type === "servico" ? "Servico" : "Equipamento"}</p>
+                    <p><span className="font-medium">Categoria:</span> {selected.category}</p>
+                    <p><span className="font-medium">Preco:</span> R$ {selected.price}/{selected.price_unit}</p>
+                    <p><span className="font-medium">Local:</span> {selected.city}, {selected.state}</p>
+                    <p><span className="font-medium">Anunciante:</span> {selected.owner_name}</p>
+                    <p><span className="font-medium">E-mail:</span> {selected.owner_email}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm mb-1">Descricao:</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{selected.description}</p>
+                  </div>
+                  {statusFilter === "pending" && (
+                    <div className="flex gap-3 pt-2">
+                      <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
+                        onClick={() => approve(selected.id)} disabled={processing === selected.id}>
+                        <Check className="h-4 w-4" />
+                        {processing === selected.id ? "Aprovando..." : "Aprovar"}
+                      </Button>
+                      <Button variant="outline" className="flex-1 text-destructive border-destructive hover:bg-destructive/10 gap-2"
+                        onClick={() => reject(selected.id)} disabled={processing === selected.id}>
+                        <X className="h-4 w-4" />
+                        {processing === selected.id ? "Rejeitando..." : "Rejeitar"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground">
+                  <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  Selecione um anuncio para ver os detalhes
                 </div>
               )}
             </div>
-          ) : (
-            <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground">
-              <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              Selecione um anuncio para ver os detalhes
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ABA USUÁRIOS */}
+      {activeTab === "users" && (
+        <div>
+          <div className="flex gap-3 mb-6">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, codigo ou cidade..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground self-center">{filteredUsers.length} usuario(s)</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-secondary">
+                <tr>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Usuario</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Codigo</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Localizacao</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Cadastro</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Admin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum usuario encontrado.</td></tr>
+                ) : filteredUsers.map((u, i) => (
+                  <tr key={u.id} className={`border-t border-border hover:bg-secondary/50 transition-colors ${i % 2 === 0 ? "" : "bg-secondary/20"}`}>
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar userId={u.id} name={u.name || ""} size="sm" />
+                        <div>
+                          <p className="font-medium">{u.name}</p>
+                          <p className="text-xs text-muted-foreground">{u.phone}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                        {u.user_code || "—"}
+                      </span>
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {u.city && u.state ? `${u.city}, ${u.state}` : "—"}
+                    </td>
+                    <td className="p-3 text-muted-foreground text-xs">
+                      {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="p-3">
+                      {u.id === user.id ? (
+                        <span className="text-xs text-muted-foreground">Voce</span>
+                      ) : (
+                        <button
+                          onClick={() => toggleAdmin(u.id, u.is_admin)}
+                          className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${u.is_admin ? "bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive" : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
+                        >
+                          {u.is_admin ? "Admin ✓" : "Tornar admin"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
