@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
+import { ImagePlus, X } from "lucide-react";
 
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
@@ -14,9 +16,11 @@ export default function CreateListing() {
 
   const [form, setForm] = useState({
     title: "", category: "", description: "", price: "", priceUnit: "por hora",
-    radius: "50", phone: "", whatsapp: "", email: "",
+    phone: "", whatsapp: "", email: "",
     availability: ["Seg", "Ter", "Qua", "Qui", "Sex"] as string[],
   });
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,14 +34,36 @@ export default function CreateListing() {
       : [...p.availability, d],
   }));
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const uploaded: string[] = [];
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("listings").upload(path, file);
+      if (!error) {
+        const { data } = supabase.storage.from("listings").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+    }
+    setImages((prev) => [...prev, ...uploaded]);
+    setUploading(false);
+  };
+
+  const removeImage = (url: string) => setImages((prev) => prev.filter((i) => i !== url));
+
   const handlePublish = async () => {
     if (!form.title || !form.category || !form.description || !form.price) {
-      setError("Preencha todos os campos obrigatorios.");
-      return;
+      setError("Preencha todos os campos obrigatorios."); return;
     }
     setError("");
     setLoading(true);
     try {
+      const finalImages = images.length > 0
+        ? images
+        : ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"];
       await addListing({
         title: form.title,
         category: form.category,
@@ -46,7 +72,7 @@ export default function CreateListing() {
         priceUnit: form.priceUnit,
         city: user.city,
         state: user.state,
-        images: ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"],
+        images: finalImages,
         availability: form.availability,
         phone: form.phone || user.phone,
         whatsapp: form.whatsapp || user.phone,
@@ -100,6 +126,34 @@ export default function CreateListing() {
             </Select>
           </div>
         </div>
+
+        {/* Upload de imagens */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Fotos do equipamento</label>
+          <div className="flex flex-wrap gap-3">
+            {images.map((url) => (
+              <div key={url} className="relative h-24 w-24 rounded-lg overflow-hidden border border-border">
+                <img src={url} alt="preview" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(url)}
+                  className="absolute top-1 right-1 h-5 w-5 bg-destructive rounded-full flex items-center justify-center"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ))}
+            {images.length < 5 && (
+              <label className="h-24 w-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground mt-1">{uploading ? "Enviando..." : "Adicionar"}</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploading} />
+              </label>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Ate 5 fotos. Se nao enviar, usaremos uma imagem padrao.</p>
+        </div>
+
         <div>
           <label className="text-sm font-medium mb-2 block">Disponibilidade</label>
           <div className="flex gap-2 flex-wrap">
@@ -119,7 +173,7 @@ export default function CreateListing() {
         <Button
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12 text-base"
           onClick={handlePublish}
-          disabled={loading}
+          disabled={loading || uploading}
         >
           {loading ? "Publicando..." : "Publicar gratuitamente"}
         </Button>
