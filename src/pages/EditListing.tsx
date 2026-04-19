@@ -14,7 +14,7 @@ const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG"
 
 export default function EditListing() {
   const { id } = useParams();
-  const { user, listings, updateListing } = useApp();
+  const { user, listings, updateListing, authLoading } = useApp();
   const navigate = useNavigate();
   const listing = listings.find((l) => l.id === id);
 
@@ -47,6 +47,7 @@ export default function EditListing() {
     }
   }, [listing]);
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
   if (!listing) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Anuncio nao encontrado.</div>;
   if (listing.ownerId !== user.id) return <Navigate to="/dashboard" />;

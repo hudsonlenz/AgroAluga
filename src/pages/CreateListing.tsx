@@ -13,7 +13,7 @@ const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function CreateListing() {
-  const { user, addListing } = useApp();
+  const { user, addListing, authLoading } = useApp();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -27,6 +27,7 @@ export default function CreateListing() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));

@@ -6,9 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 
 export default function Dashboard() {
-  const { user, listings, updateListing } = useApp();
+  const { user, listings, updateListing, authLoading } = useApp();
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
 
   const myListings = listings.filter((l) => l.ownerId === user.id);

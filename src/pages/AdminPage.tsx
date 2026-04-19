@@ -22,7 +22,7 @@ interface PendingListing {
 }
 
 export default function AdminPage() {
-  const { user } = useApp();
+  const { user, authLoading } = useApp();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [listings, setListings] = useState<PendingListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +77,7 @@ export default function AdminPage() {
     setProcessing(null);
   }
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
   if (isAdmin === false) return <Navigate to="/" />;
   if (isAdmin === null) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Verificando permissoes...</div>;

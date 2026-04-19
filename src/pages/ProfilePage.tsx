@@ -9,7 +9,7 @@ import { Camera, User } from "lucide-react";
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function ProfilePage() {
-  const { user, setUser } = useApp();
+  const { user, setUser, authLoading } = useApp();
   const [form, setForm] = useState({ name: "", phone: "", city: "", state: "" });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
 
   useEffect(() => {

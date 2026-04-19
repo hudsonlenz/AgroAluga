@@ -26,7 +26,7 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { user } = useApp();
+  const { user, authLoading } = useApp();
   const [searchParams] = useSearchParams();
   const newListingId = searchParams.get("listing");
   const newSellerId = searchParams.get("seller");
@@ -40,6 +40,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
 
   useEffect(() => {
