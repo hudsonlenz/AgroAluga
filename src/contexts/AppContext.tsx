@@ -11,7 +11,6 @@ export interface Listing {
   priceUnit: string;
   city: string;
   state: string;
-  distance: number;
   rating: number;
   reviewCount: number;
   images: string[];
@@ -47,9 +46,7 @@ export interface Review {
   date: string;
 }
 
-interface AuthError {
-  message: string;
-}
+interface AuthError { message: string; }
 
 interface RegisterData {
   name: string;
@@ -68,103 +65,16 @@ interface AppState {
   reviews: Review[];
   revealedContacts: string[];
   authLoading: boolean;
+  listingsLoading: boolean;
   login: (email: string, password: string) => Promise<AuthError | null>;
   logout: () => Promise<void>;
   register: (data: RegisterData) => Promise<AuthError | null>;
   revealContact: (listingId: string) => void;
-  addListing: (listing: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => void;
+  addListing: (listing: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt" | "rating" | "reviewCount">) => Promise<void>;
   updateListing: (id: string, data: Partial<Listing>) => void;
 }
 
-const CATEGORIES = [
-  "Aluguel de Trator",
-  "Colheitadeira",
-  "Plantadeira",
-  "Pulverizador / Defensivos",
-  "Transporte de Grãos",
-  "Manutenção de Implementos",
-  "Irrigação",
-  "Operador + Máquina",
-  "Outros Serviços",
-];
-
-const CITIES = [
-  { city: "Ribeirão Preto", state: "SP" },
-  { city: "Uberlândia", state: "MG" },
-  { city: "Londrina", state: "PR" },
-  { city: "Rio Verde", state: "GO" },
-  { city: "Sorriso", state: "MT" },
-  { city: "Luís Eduardo Magalhães", state: "BA" },
-  { city: "Dourados", state: "MS" },
-  { city: "Cascavel", state: "PR" },
-  { city: "Chapecó", state: "SC" },
-];
-
-const names = [
-  "João Silva", "Maria Oliveira", "Carlos Santos", "Ana Pereira",
-  "Pedro Costa", "Fernanda Souza", "Ricardo Lima", "Juliana Almeida",
-  "Marcos Ribeiro", "Patrícia Ferreira", "Lucas Martins", "Camila Rocha",
-];
-
-function generateMockListings(): Listing[] {
-  const listings: Listing[] = [];
-  for (let i = 0; i < 27; i++) {
-    const loc = CITIES[i % CITIES.length];
-    const cat = CATEGORIES[i % CATEGORIES.length];
-    const owner = names[i % names.length];
-    listings.push({
-      id: `listing-${i + 1}`,
-      title: `${cat} — ${loc.city}`,
-      category: cat,
-      description: `Servico profissional de ${cat.toLowerCase()} na regiao de ${loc.city}. Equipamento em excelente estado, operador experiente com mais de 10 anos de atuacao no campo.`,
-      price: [80, 120, 150, 200, 90, 100, 130, 250, 70][i % 9],
-      priceUnit: ["por hora", "por hectare", "por hora", "por hectare", "por km", "por hora", "por hectare", "por diaria", "por hora"][i % 9],
-      city: loc.city,
-      state: loc.state,
-      distance: (i * 7 % 95) + 5,
-      rating: +((i % 15) / 10 + 3.5).toFixed(1),
-      reviewCount: (i * 3 % 40) + 3,
-      images: [`https://images.unsplash.com/photo-${["1625246333195-78d9c38ad449", "1574943320219-553eb213f72d", "1592982537447-6f2a6a0c8b8b", "1530267981375-f0de937f5f13", "1586771107445-d3ca888129ff"][i % 5]}?w=600&h=400&fit=crop`],
-      availability: ["Seg", "Ter", "Qua", "Qui", "Sex"].slice(0, 3 + (i % 3)),
-      phone: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
-      whatsapp: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
-      email: `${owner.toLowerCase().replace(/ /g, ".")}@email.com`,
-      ownerId: `user-${(i % 4) + 2}`,
-      ownerName: owner,
-      featured: i < 9,
-      status: "active",
-      views: (i * 17 % 500) + 50,
-      contactsRevealed: i * 3 % 30,
-      createdAt: new Date(Date.now() - i * 3 * 86400000).toISOString(),
-    });
-  }
-  return listings;
-}
-
-function generateMockReviews(listings: Listing[]): Review[] {
-  const reviews: Review[] = [];
-  listings.forEach((l) => {
-    const count = Math.min(l.reviewCount, 3);
-    for (let j = 0; j < count; j++) {
-      reviews.push({
-        id: `review-${l.id}-${j}`,
-        listingId: l.id,
-        userName: names[(parseInt(l.id.split("-")[1]) + j) % names.length],
-        rating: (j % 2) + 4,
-        comment: [
-          "Excelente servico! Muito profissional e pontual.",
-          "Equipamento em otimo estado, recomendo!",
-          "Bom custo-beneficio, atendeu bem nossa demanda.",
-        ][j],
-        date: new Date(Date.now() - j * 10 * 86400000).toISOString(),
-      });
-    }
-  });
-  return reviews;
-}
-
-const mockListings = generateMockListings();
-const mockReviews = generateMockReviews(mockListings);
+const CATEGORIES = ["Aluguel de Trator","Colheitadeira","Plantadeira","Pulverizador / Defensivos","Transporte de Graos","Manutencao de Implementos","Irrigacao","Operador + Maquina","Outros Servicos"];
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
@@ -172,9 +82,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [listings, setListings] = useState<Listing[]>(mockListings);
-  const [reviews] = useState<Review[]>(mockReviews);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [reviews] = useState<Review[]>([]);
   const [revealedContacts, setRevealedContacts] = useState<string[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -182,29 +93,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (session?.user) setUser(mapSupabaseUser(session.user));
       setAuthLoading(false);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) {
-        setUser(mapSupabaseUser(session.user));
-      } else {
-        setUser(null);
-      }
+      if (session?.user) { setUser(mapSupabaseUser(session.user)); } else { setUser(null); }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  function mapSupabaseUser(supabaseUser: NonNullable<Session["user"]>): User {
-    const meta = supabaseUser.user_metadata || {};
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  async function fetchListings() {
+    setListingsLoading(true);
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      setListings(data.map(mapListing));
+    }
+    setListingsLoading(false);
+  }
+
+  function mapListing(row: any): Listing {
     return {
-      id: supabaseUser.id,
-      name: meta.name || supabaseUser.email?.split("@")[0] || "Usuario",
-      email: supabaseUser.email || "",
-      phone: meta.phone || "",
-      city: meta.city || "",
-      state: meta.state || "",
-      accountType: meta.accountType || "contractor",
+      id: row.id,
+      title: row.title,
+      category: row.category,
+      description: row.description || "",
+      price: row.price,
+      priceUnit: row.price_unit,
+      city: row.city,
+      state: row.state,
+      rating: 0,
+      reviewCount: 0,
+      images: row.images || [],
+      availability: row.availability || [],
+      phone: row.phone || "",
+      whatsapp: row.whatsapp || "",
+      email: row.email || "",
+      ownerId: row.owner_id,
+      ownerName: row.owner_name,
+      featured: row.featured || false,
+      status: row.status,
+      views: row.views || 0,
+      contactsRevealed: row.contacts_revealed || 0,
+      createdAt: row.created_at,
+    };
+  }
+
+  function mapSupabaseUser(u: NonNullable<Session["user"]>): User {
+    const m = u.user_metadata || {};
+    return {
+      id: u.id,
+      name: m.name || u.email?.split("@")[0] || "Usuario",
+      email: u.email || "",
+      phone: m.phone || "",
+      city: m.city || "",
+      state: m.state || "",
+      accountType: m.accountType || "contractor",
     };
   }
 
@@ -213,53 +162,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (msg.includes("Email not confirmed")) return "Confirme seu e-mail antes de entrar.";
     if (msg.includes("User already registered")) return "Este e-mail ja esta cadastrado.";
     if (msg.includes("Password should be at least")) return "A senha deve ter no minimo 6 caracteres.";
-    if (msg.includes("Unable to validate email address")) return "E-mail invalido.";
     return "Ocorreu um erro. Tente novamente.";
   }
 
   const login = async (email: string, password: string): Promise<AuthError | null> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { message: traduzirErro(error.message) };
-    return null;
+    return error ? { message: traduzirErro(error.message) } : null;
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-  };
+  const logout = async () => { await supabase.auth.signOut(); setUser(null); setSession(null); };
 
   const register = async (data: RegisterData): Promise<AuthError | null> => {
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      options: {
-        data: {
-          name: data.name,
-          phone: data.phone,
-          city: data.city,
-          state: data.state,
-          accountType: data.accountType,
-        },
-      },
+      options: { data: { name: data.name, phone: data.phone, city: data.city, state: data.state, accountType: data.accountType } },
     });
-    if (error) return { message: traduzirErro(error.message) };
-    return null;
+    return error ? { message: traduzirErro(error.message) } : null;
   };
 
-  const revealContact = (listingId: string) => {
-    setRevealedContacts((prev) => [...prev, listingId]);
-  };
+  const revealContact = (listingId: string) => setRevealedContacts((prev) => [...prev, listingId]);
 
-  const addListing = (data: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => {
-    const newListing: Listing = {
-      ...data,
-      id: "listing-" + Date.now(),
-      views: 0,
-      contactsRevealed: 0,
-      createdAt: new Date().toISOString(),
-    };
-    setListings((prev) => [newListing, ...prev]);
+  const addListing = async (data: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt" | "rating" | "reviewCount">) => {
+    if (!user) return;
+    const { data: inserted, error } = await supabase.from("listings").insert({
+      owner_id: user.id,
+      owner_name: user.name,
+      title: data.title,
+      category: data.category,
+      description: data.description,
+      price: data.price,
+      price_unit: data.priceUnit,
+      city: data.city,
+      state: data.state,
+      phone: data.phone,
+      whatsapp: data.whatsapp,
+      email: data.email,
+      availability: data.availability,
+      images: data.images,
+      featured: data.featured,
+      status: data.status,
+    }).select().single();
+    if (!error && inserted) {
+      setListings((prev) => [mapListing(inserted), ...prev]);
+    }
   };
 
   const updateListing = (id: string, data: Partial<Listing>) => {
@@ -267,11 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{
-      user, session, listings, reviews, revealedContacts,
-      authLoading, login, logout, register,
-      revealContact, addListing, updateListing,
-    }}>
+    <AppContext.Provider value={{ user, session, listings, reviews, revealedContacts, authLoading, listingsLoading, login, logout, register, revealContact, addListing, updateListing }}>
       {children}
     </AppContext.Provider>
   );
