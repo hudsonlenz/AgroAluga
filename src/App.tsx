@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Route, Routes } from "react-router-dom"; 
+import { HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,19 +25,26 @@ const App = () => (
       <AppProvider>
         <Toaster />
         <Sonner />
-<HashRouter>
-  <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <main className="flex-1">
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/busca" element={<SearchPage />} />
-        ...
-      </Routes>
-    </main>
-    <Footer />
-  </div>
-</HashRouter>
+        <HashRouter>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/busca" element={<SearchPage />} />
+                <Route path="/anuncio/:id" element={<ListingDetail />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/cadastro" element={<RegisterPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/criar-anuncio" element={<CreateListing />} />
+                <Route path="/como-funciona" element={<ComoFunciona />} />
+                <Route path="/beneficios" element={<Beneficios />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </HashRouter>
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
