@@ -1,3 +1,197 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+
+export interface Listing {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  price: number;
+  priceUnit: string;
+  city: string;
+  state: string;
+  distance: number;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  availability: string[];
+  phone: string;
+  whatsapp: string;
+  email: string;
+  ownerId: string;
+  ownerName: string;
+  featured: boolean;
+  status: "active" | "expired" | "pending";
+  views: number;
+  contactsRevealed: number;
+  createdAt: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  accountType: "contractor" | "provider";
+}
+
+export interface Review {
+  id: string;
+  listingId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+interface AuthError { message: string; }
+
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  city: string;
+  state: string;
+  accountType: "contractor" | "provider";
+}
+
+interface AppState {
+  user: User | null;
+  session: Session | null;
+  listings: Listing[];
+  reviews: Review[];
+  revealedContacts: string[];
+  authLoading: boolean;
+  login: (email: string, password: string) => Promise<AuthError | null>;
+  logout: () => Promise<void>;
+  register: (data: RegisterData) => Promise<AuthError | null>;
+  revealContact: (listingId: string) => void;
+  addListing: (listing: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => void;
+  updateListing: (id: string, data: Partial<Listing>) => void;
+}
+
+const CATEGORIES = ["Aluguel de Trator","Colheitadeira","Plantadeira","Pulverizador / Defensivos","Transporte de Graos","Manutencao de Implementos","Irrigacao","Operador + Maquina","Outros Servicos"];
+const CITIES = [{city:"Ribeirao Preto",state:"SP"},{city:"Uberlandia",state:"MG"},{city:"Londrina",state:"PR"},{city:"Rio Verde",state:"GO"},{city:"Sorriso",state:"MT"},{city:"Luis Eduardo Magalhaes",state:"BA"},{city:"Dourados",state:"MS"},{city:"Cascavel",state:"PR"},{city:"Chapeco",state:"SC"}];
+const names = ["Joao Silva","Maria Oliveira","Carlos Santos","Ana Pereira","Pedro Costa","Fernanda Souza","Ricardo Lima","Juliana Almeida","Marcos Ribeiro","Patricia Ferreira","Lucas Martins","Camila Rocha"];
+
+function generateMockListings(): Listing[] {
+  const listings: Listing[] = [];
+  for (let i = 0; i < 27; i++) {
+    const loc = CITIES[i % CITIES.length];
+    const cat = CATEGORIES[i % CATEGORIES.length];
+    const owner = names[i % names.length];
+    listings.push({
+      id: `listing-${i + 1}`, title: `${cat} — ${loc.city}`, category: cat,
+      description: `Servico profissional de ${cat} na regiao de ${loc.city}.`,
+      price: [80,120,150,200,90,100,130,250,70][i % 9],
+      priceUnit: ["por hora","por hectare","por hora","por hectare","por km","por hora","por hectare","por diaria","por hora"][i % 9],
+      city: loc.city, state: loc.state, distance: (i * 7 % 95) + 5,
+      rating: +((i % 15) / 10 + 3.5).toFixed(1), reviewCount: (i * 3 % 40) + 3,
+      images: [`https://images.unsplash.com/photo-${["1625246333195-78d9c38ad449","1574943320219-553eb213f72d","1592982537447-6f2a6a0c8b8b","1530267981375-f0de937f5f13","1586771107445-d3ca888129ff"][i % 5]}?w=600&h=400&fit=crop`],
+      availability: ["Seg","Ter","Qua","Qui","Sex"].slice(0, 3 + (i % 3)),
+      phone: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
+      whatsapp: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
+      email: `${owner.toLowerCase().replace(/ /g,".")}@email.com`,
+      ownerId: `user-${(i % 4) + 2}`, ownerName: owner, featured: i < 9,
+      status: "active", views: (i * 17 % 500) + 50, contactsRevealed: i * 3 % 30,
+      createdAt: new Date(Date.now() - i * 3 * 86400000).toISOString(),
+    });
+  }
+  return listings;
+}
+
+function generateMockReviews(listings: Listing[]): Review[] {
+  const reviews: Review[] = [];
+  listings.forEach((l) => {
+    const count = Math.min(l.reviewCount, 3);
+    for (let j = 0; j < count; j++) {
+      reviews.push({
+        id: `review-${l.id}-${j}`, listingId: l.id,
+        userName: names[(parseInt(l.id.split("-")[1]) + j) % names.length],
+        rating: (j % 2) + 4,
+        comment: ["Excelente servico!","Equipamento otimo, recomendo!","Bom custo-beneficio."][j],
+        date: new Date(Date.now() - j * 10 * 86400000).toISOString(),
+      });
+    }
+  });
+  return reviews;
+}
+
+const mockListings = generateMockListings();
+const mockReviews = generateMockReviews(mockListings);
+const AppContext = createContext<AppState | undefined>(undefined);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [listings, setListings] = useState<Listing[]>(mockListings);
+  const [reviews] = useState<Review[]>(mockReviews);
+  const [revealedContacts, setRevealedContacts] = useState<string[]>([]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) setUser(mapSupabaseUser(session.user));
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) { setUser(mapSupabaseUser(session.user)); } else { setUser(null); }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  function mapSupabaseUser(u: NonNullable<Session["user"]>): User {
+    const m = u.user_metadata || {};
+    return { id: u.id, name: m.name || u.email?.split("@")[0] || "Usuario", email: u.email || "", phone: m.phone || "", city: m.city || "", state: m.state || "", accountType: m.accountType || "contractor" };
+  }
+
+  function traduzirErro(msg: string): string {
+    if (msg.includes("Invalid login credentials")) return "E-mail ou senha incorretos.";
+    if (msg.includes("Email not confirmed")) return "Confirme seu e-mail antes de entrar.";
+    if (msg.includes("User already registered")) return "Este e-mail ja esta cadastrado.";
+    if (msg.includes("Password should be at least")) return "A senha deve ter no minimo 6 caracteres.";
+    return "Ocorreu um erro. Tente novamente.";
+  }
+
+  const login = async (email: string, password: string): Promise<AuthError | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? { message: traduzirErro(error.message) } : null;
+  };
+
+  const logout = async () => { await supabase.auth.signOut(); setUser(null); setSession(null); };
+
+  const register = async (data: RegisterData): Promise<AuthError | null> => {
+    const { error } = await supabase.auth.signUp({ email: data.email, password: data.password, options: { data: { name: data.name, phone: data.phone, city: data.city, state: data.state, accountType: data.accountType } } });
+    return error ? { message: traduzirErro(error.message) } : null;
+  };
+
+  const revealContact = (listingId: string) => setRevealedContacts((prev) => [...prev, listingId]);
+
+  const addListing = (data: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => {
+    setListings((prev) => [{ ...data, id: "listing-" + Date.now(), views: 0, contactsRevealed: 0, createdAt: new Date().toISOString() }, ...prev]);
+  };
+
+  const updateListing = (id: string, data: Partial<Listing>) => {
+    setListings((prev) => prev.map((l) => (l.id === id ? { ...l, ...data } : l)));
+  };
+
+  return (
+    <AppContext.Provider value={{ user, session, listings, reviews, revealedContacts, authLoading, login, logout, register, revealContact, addListing, updateListing }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
+  return ctx;
+}
+
+export { CATEGORIES };
