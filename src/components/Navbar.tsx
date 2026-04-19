@@ -1,12 +1,20 @@
 import { Link } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { Menu, X, Tractor } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
   const { user, logout } = useApp();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+      .then(({ data }) => setIsAdmin(data?.is_admin || false));
+  }, [user]);
 
   return (
     <nav className="bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
@@ -35,6 +43,13 @@ export default function Navbar() {
                   Mensagens
                 </Button>
               </Link>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium">
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={() => logout()}>
                 Sair
               </Button>
@@ -65,6 +80,9 @@ export default function Navbar() {
             <>
               <Link to="/dashboard" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Dashboard</Link>
               <Link to="/mensagens" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Mensagens</Link>
+              {isAdmin && (
+                <Link to="/admin" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Admin</Link>
+              )}
               <button className="block py-2 hover:text-accent" onClick={() => { logout(); setOpen(false); }}>Sair</button>
             </>
           ) : (
