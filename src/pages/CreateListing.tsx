@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useApp, CATEGORIES } from "@/contexts/AppContext";
+import { useApp, EQUIPMENT_CATEGORIES, SERVICE_CATEGORIES } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { geocodeCity } from "@/lib/geo";
-import { ImagePlus, X, MapPin } from "lucide-react";
+import { ImagePlus, X, MapPin, Tractor, Wrench } from "lucide-react";
 
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function CreateListing() {
-  const { user, addListing, authLoading } = useApp();
+  const { user, addListing } = useApp();
   const navigate = useNavigate();
 
+  const [listingType, setListingType] = useState<"equipamento" | "servico">("equipamento");
   const [form, setForm] = useState({
     title: "", category: "", description: "", price: "", priceUnit: "por hora",
     phone: "", whatsapp: "", email: "",
@@ -27,8 +28,9 @@ export default function CreateListing() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
+
+  const categories = listingType === "equipamento" ? EQUIPMENT_CATEGORIES : SERVICE_CATEGORIES;
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   const toggleDay = (d: string) => setForm((p) => ({
@@ -37,6 +39,11 @@ export default function CreateListing() {
       ? p.availability.filter((x) => x !== d)
       : [...p.availability, d],
   }));
+
+  const handleTypeChange = (type: "equipamento" | "servico") => {
+    setListingType(type);
+    setForm((p) => ({ ...p, category: "" })); // resetar categoria ao trocar tipo
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -65,9 +72,7 @@ export default function CreateListing() {
     setError("");
     setLoading(true);
     try {
-      // Geocodificar a cidade do anúncio
       const coords = await geocodeCity(form.city, form.state);
-
       const finalImages = images.length > 0
         ? images
         : ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"];
@@ -91,6 +96,7 @@ export default function CreateListing() {
         ownerName: user.name,
         featured: false,
         status: "pending",
+        listingType,
       } as any);
       navigate("/dashboard");
     } catch (e) {
@@ -104,23 +110,61 @@ export default function CreateListing() {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <h1 className="text-2xl font-heading font-bold mb-2">Criar Anuncio</h1>
       <p className="text-sm text-muted-foreground mb-6">Publicacao gratuita — sem custo para anunciar.</p>
+
       <div className="bg-card border border-border rounded-lg p-6 space-y-5">
         {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Tipo de anúncio */}
         <div>
-          <label className="text-sm font-medium mb-1 block">Titulo do servico *</label>
-          <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Ex: Aluguel de Trator — Ribeirao Preto" />
+          <label className="text-sm font-medium mb-2 block">Tipo de anuncio *</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleTypeChange("equipamento")}
+              className={`p-4 rounded-lg border text-left transition-all flex items-center gap-3 ${listingType === "equipamento" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}
+            >
+              <Tractor className={`h-6 w-6 ${listingType === "equipamento" ? "text-primary" : "text-muted-foreground"}`} />
+              <div>
+                <p className={`font-semibold text-sm ${listingType === "equipamento" ? "text-primary" : ""}`}>Equipamento</p>
+                <p className="text-xs text-muted-foreground">Maquinas e ferramentas</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeChange("servico")}
+              className={`p-4 rounded-lg border text-left transition-all flex items-center gap-3 ${listingType === "servico" ? "border-accent bg-accent/10" : "border-border hover:border-accent/50"}`}
+            >
+              <Wrench className={`h-6 w-6 ${listingType === "servico" ? "text-accent" : "text-muted-foreground"}`} />
+              <div>
+                <p className={`font-semibold text-sm ${listingType === "servico" ? "text-accent-foreground" : ""}`}>Servico</p>
+                <p className="text-xs text-muted-foreground">Mao de obra e consultoria</p>
+              </div>
+            </button>
+          </div>
         </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Titulo *</label>
+          <Input value={form.title} onChange={(e) => set("title", e.target.value)}
+            placeholder={listingType === "equipamento" ? "Ex: Trator New Holland — Indaial, SC" : "Ex: Mapeamento Aereo com Drone — Indaial, SC"} />
+        </div>
+
         <div>
           <label className="text-sm font-medium mb-1 block">Categoria *</label>
           <Select value={form.category} onValueChange={(v) => set("category", v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-            <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+            <SelectContent>
+              {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
           </Select>
         </div>
+
         <div>
           <label className="text-sm font-medium mb-1 block">Descricao *</label>
-          <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4} placeholder="Descreva o servico ou equipamento..." />
+          <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4}
+            placeholder={listingType === "equipamento" ? "Descreva o equipamento, estado de conservacao, marca, modelo..." : "Descreva o servico, sua experiencia, area de atuacao..."} />
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-sm font-medium mb-1 block">Preco *</label>
@@ -131,38 +175,30 @@ export default function CreateListing() {
             <Select value={form.priceUnit} onValueChange={(v) => set("priceUnit", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {["por hora", "por hectare", "por km", "por diaria"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {["por hora", "por hectare", "por km", "por diaria", "por tarefa", "a combinar"].map((u) => (
+                  <SelectItem key={u} value={u}>{u}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Localização do serviço */}
         <div>
           <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> Localizacao do servico *
+            <MapPin className="h-3 w-3" /> Localizacao *
           </label>
           <div className="grid grid-cols-3 gap-3">
-            <Input
-              placeholder="Cidade *"
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
-              className="col-span-2"
-            />
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={form.state}
-              onChange={(e) => set("state", e.target.value)}
-            >
+            <Input placeholder="Cidade *" value={form.city} onChange={(e) => set("city", e.target.value)} className="col-span-2" />
+            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={form.state} onChange={(e) => set("state", e.target.value)}>
               <option value="">UF *</option>
               {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Upload de imagens */}
         <div>
-          <label className="text-sm font-medium mb-2 block">Fotos do equipamento</label>
+          <label className="text-sm font-medium mb-2 block">Fotos</label>
           <div className="flex flex-wrap gap-3">
             {images.map((url) => (
               <div key={url} className="relative h-24 w-24 rounded-lg overflow-hidden border border-border">
@@ -195,16 +231,15 @@ export default function CreateListing() {
             ))}
           </div>
         </div>
+
         <div className="grid grid-cols-3 gap-3">
           <Input placeholder="Telefone" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
           <Input placeholder="WhatsApp" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
           <Input placeholder="E-mail" value={form.email} onChange={(e) => set("email", e.target.value)} />
         </div>
-        <Button
-          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12 text-base"
-          onClick={handlePublish}
-          disabled={loading || uploading}
-        >
+
+        <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12 text-base"
+          onClick={handlePublish} disabled={loading || uploading}>
           {loading ? "Publicando..." : "Publicar gratuitamente"}
         </Button>
       </div>

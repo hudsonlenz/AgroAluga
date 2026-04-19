@@ -78,7 +78,38 @@ interface AppState {
   updateListing: (id: string, data: Partial<Listing>) => void;
 }
 
-const CATEGORIES = ["Aluguel de Trator","Colheitadeira","Plantadeira","Pulverizador / Defensivos","Transporte de Graos","Manutencao de Implementos","Irrigacao","Operador + Maquina","Outros Servicos"];
+export const EQUIPMENT_CATEGORIES = [
+  "Tratores e Implementos",
+  "Colheitadeiras",
+  "Plantadeiras e Semeadoras",
+  "Pulverizadores",
+  "Caminhoes e Transporte",
+  "Irrigacao e Bombeamento",
+  "Drones Agricolas",
+  "Ferramentas Eletricas",
+  "Motosserras e Roçadeiras",
+  "Ferramentas Manuais",
+  "Equipamentos de Seguranca",
+  "Geradores e Compressores",
+  "Outros Equipamentos",
+];
+
+export const SERVICE_CATEGORIES = [
+  "Operador + Maquina",
+  "Manutencao de Implementos",
+  "Fotografia e Mapeamento Aereo",
+  "Coleta de Amostras de Solo",
+  "Analise e Consultoria Agricola",
+  "Aplicacao de Defensivos",
+  "Instalacao de Irrigacao",
+  "Servicos Veterinarios",
+  "Transporte de Animais",
+  "Cercamento e Terraplanagem",
+  "Armazenagem de Graos",
+  "Outros Servicos",
+];
+
+const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
@@ -145,6 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       views: row.views || 0,
       contactsRevealed: row.contacts_revealed || 0,
       createdAt: row.created_at,
+      listingType: row.listing_type,
       latitude: row.latitude,
       longitude: row.longitude,
     };
@@ -208,6 +240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       images: data.images,
       featured: data.featured,
       status: data.status,
+      listing_type: (data as any).listingType || 'equipamento',
       latitude: (data as any).latitude,
       longitude: (data as any).longitude,
     }).select().single();
