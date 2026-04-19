@@ -16,8 +16,15 @@ export default function RedefinirSenhaPage() {
 
   useEffect(() => {
     async function checkSession() {
+      // Debug — mostrar URL atual
+      console.log("URL completa:", window.location.href);
+      console.log("Hash:", window.location.hash);
+      console.log("Search:", window.location.search);
+      console.log("Pathname:", window.location.pathname);
+
       // Verificar sessão atual
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Sessao atual:", session);
       if (session) {
         setValidSession(true);
         return;
