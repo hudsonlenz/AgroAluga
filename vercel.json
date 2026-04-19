@@ -1,7 +1,6 @@
-bashcat > vercel.json << 'EOF'
+cat > vercel.json << 'EOF'
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
-EOF
