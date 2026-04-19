@@ -36,7 +36,7 @@ export default function LoginPage() {
     setResetLoading(true);
     setError("");
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: "https://agro-aluga.vercel.app/#/redefinir-senha",
+      redirectTo: "https://agro-aluga.vercel.app/redefinir-senha",
     });
     setResetLoading(false);
     if (error) {
