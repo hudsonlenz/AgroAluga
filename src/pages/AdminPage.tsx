@@ -18,6 +18,7 @@ interface PendingListing {
   owner_name: string;
   created_at: string;
   status: string;
+  owner_email: string;
 }
 
 export default function AdminPage() {
