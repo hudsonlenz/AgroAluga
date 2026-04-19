@@ -1,21 +1,34 @@
 import { Link } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Menu, X, Tractor } from "lucide-react";
+import { Menu, X, Tractor, ChevronDown, LayoutDashboard, MessageCircle, ShieldCheck, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/UserAvatar";
 
 export default function Navbar() {
   const { user, logout } = useApp();
   const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase.from("profiles").select("is_admin").eq("id", user.id).single()
       .then(({ data }) => setIsAdmin(data?.is_admin || false));
   }, [user]);
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
@@ -33,34 +46,51 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           {user ? (
-            <>
-              <Link to="/dashboard">
-                <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium">
-                  Dashboard
-                </Button>
-              </Link>
-              <Link to="/mensagens">
-                <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium">
-                  Mensagens
-                </Button>
-              </Link>
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium">
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <Link to="/perfil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity px-2 py-1 rounded-lg hover:bg-primary-medium"
+              >
                 <UserAvatar userId={user.id} name={user.name} size="sm" />
-                <span className="text-sm text-primary-foreground font-medium">
-                  {user.name.split(" ")[0]}
-                </span>
-              </Link>
-              <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={() => logout()}>
-                Sair
-              </Button>
-            </>
+                <span className="text-sm font-medium">{user.name.split(" ")[0]}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute right-0 top-12 w-52 bg-card border border-border rounded-lg shadow-xl py-1 z-50">
+                  <div className="px-4 py-2 border-b border-border">
+                    <p className="font-medium text-sm text-card-foreground">{user.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  <Link to="/perfil" onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-card-foreground hover:bg-secondary transition-colors">
+                    <User className="h-4 w-4 text-muted-foreground" /> Meu Perfil
+                  </Link>
+                  <Link to="/dashboard" onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-card-foreground hover:bg-secondary transition-colors">
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> Dashboard
+                  </Link>
+                  <Link to="/mensagens" onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-card-foreground hover:bg-secondary transition-colors">
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" /> Mensagens
+                  </Link>
+                  {isAdmin && (
+                    <Link to="/admin" onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-card-foreground hover:bg-secondary transition-colors">
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" /> Admin
+                    </Link>
+                  )}
+                  <div className="border-t border-border mt-1">
+                    <button
+                      onClick={() => { logout(); setDropdownOpen(false); }}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-secondary transition-colors w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4" /> Sair
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link to="/login">
@@ -85,13 +115,17 @@ export default function Navbar() {
           <Link to="/beneficios" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Beneficios</Link>
           {user ? (
             <>
+              <div className="flex items-center gap-2 py-2 border-t border-primary-medium">
+                <UserAvatar userId={user.id} name={user.name} size="sm" />
+                <span className="text-sm font-medium">{user.name}</span>
+              </div>
+              <Link to="/perfil" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Meu Perfil</Link>
               <Link to="/dashboard" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Dashboard</Link>
               <Link to="/mensagens" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Mensagens</Link>
-              <Link to="/perfil" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Meu Perfil</Link>
               {isAdmin && (
                 <Link to="/admin" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Admin</Link>
               )}
-              <button className="block py-2 hover:text-accent" onClick={() => { logout(); setOpen(false); }}>Sair</button>
+              <button className="block py-2 hover:text-accent text-left w-full" onClick={() => { logout(); setOpen(false); }}>Sair</button>
             </>
           ) : (
             <>
