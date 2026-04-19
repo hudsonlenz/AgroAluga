@@ -12,13 +12,32 @@ export default function RedefinirSenhaPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [validSession, setValidSession] = useState(false);
+  const [validSession, setValidSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Verificar se há sessão de reset válida
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setValidSession(true);
+    // O Supabase envia o token no hash da URL
+    // Precisamos processar o evento PASSWORD_RECOVERY
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setValidSession(true);
+      } else if (session) {
+        setValidSession(true);
+      }
     });
+
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setValidSession(true);
+      } else {
+        // Aguardar um pouco para o evento PASSWORD_RECOVERY ser disparado
+        setTimeout(() => {
+          setValidSession((prev) => prev === null ? false : prev);
+        }, 2000);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,16 +56,30 @@ export default function RedefinirSenhaPage() {
       setError("Erro ao redefinir senha. Tente novamente.");
     } else {
       setSuccess(true);
-      setTimeout(() => navigate("/dashboard"), 3000);
+      await supabase.auth.signOut();
+      setTimeout(() => navigate("/login"), 3000);
     }
   };
 
-  if (!validSession) return (
+  // Carregando
+  if (validSession === null) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground">Verificando link...</p>
+      </div>
+    </div>
+  );
+
+  // Link inválido
+  if (validSession === false) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8 text-center">
         <Tractor className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-xl font-heading font-bold mb-2">Link invalido</h2>
-        <p className="text-muted-foreground mb-6">Este link de redefinicao expirou ou ja foi utilizado.</p>
+        <h2 className="text-xl font-heading font-bold mb-2">Link invalido ou expirado</h2>
+        <p className="text-muted-foreground mb-6">
+          Este link de redefinicao expirou ou ja foi utilizado. Solicite um novo link.
+        </p>
         <Button className="bg-primary text-primary-foreground w-full" onClick={() => navigate("/login")}>
           Voltar ao login
         </Button>
@@ -67,11 +100,14 @@ export default function RedefinirSenhaPage() {
           <div className="text-center space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-700 font-medium">Senha redefinida com sucesso!</p>
-              <p className="text-green-600 text-sm mt-1">Redirecionando para o dashboard...</p>
+              <p className="text-green-600 text-sm mt-1">Redirecionando para o login...</p>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center mb-2">
+              Digite sua nova senha abaixo.
+            </p>
             {error && <p className="text-sm text-destructive text-center bg-destructive/10 p-3 rounded-md">{error}</p>}
             <Input
               type="password"
