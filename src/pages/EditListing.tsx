@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { ImagePlus, X } from "lucide-react";
+import { geocodeCity } from "@/lib/geo";
+import { ImagePlus, X, MapPin } from "lucide-react";
 
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function EditListing() {
   const { id } = useParams();
@@ -18,7 +20,7 @@ export default function EditListing() {
 
   const [form, setForm] = useState({
     title: "", category: "", description: "", price: "", priceUnit: "por hora",
-    phone: "", whatsapp: "", email: "",
+    phone: "", whatsapp: "", email: "", city: "", state: "",
     availability: [] as string[],
   });
   const [images, setImages] = useState<string[]>([]);
@@ -37,6 +39,8 @@ export default function EditListing() {
         phone: listing.phone,
         whatsapp: listing.whatsapp,
         email: listing.email,
+        city: listing.city,
+        state: listing.state,
         availability: listing.availability,
       });
       setImages(listing.images);
@@ -76,12 +80,15 @@ export default function EditListing() {
   const removeImage = (url: string) => setImages((prev) => prev.filter((i) => i !== url));
 
   const handleSave = async () => {
-    if (!form.title || !form.category || !form.description || !form.price) {
+    if (!form.title || !form.category || !form.description || !form.price || !form.city || !form.state) {
       setError("Preencha todos os campos obrigatorios."); return;
     }
     setError("");
     setLoading(true);
     try {
+      // Geocodificar se cidade/estado mudou
+      const coords = await geocodeCity(form.city, form.state);
+
       const updates = {
         title: form.title,
         category: form.category,
@@ -91,8 +98,12 @@ export default function EditListing() {
         phone: form.phone,
         whatsapp: form.whatsapp,
         email: form.email,
+        city: form.city,
+        state: form.state,
         availability: form.availability,
         images: images.length > 0 ? images : listing.images,
+        latitude: coords?.lat || null,
+        longitude: coords?.lng || null,
       };
       const { error } = await supabase.from("listings").update(updates).eq("id", id);
       if (error) throw error;
@@ -142,6 +153,29 @@ export default function EditListing() {
                 {["por hora", "por hectare", "por km", "por diaria"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        {/* Localização */}
+        <div>
+          <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+            <MapPin className="h-3 w-3" /> Localizacao do servico *
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <Input
+              placeholder="Cidade *"
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              className="col-span-2"
+            />
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+            >
+              <option value="">UF *</option>
+              {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
         </div>
 
