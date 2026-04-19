@@ -40,7 +40,8 @@ export default function LoginPage() {
     });
     setResetLoading(false);
     if (error) {
-      setError("Erro ao enviar e-mail. Verifique o endereco informado.");
+      console.log("Erro reset:", error);
+      setError(`Erro: ${error.message}`);
     } else {
       setResetSent(true);
     }
