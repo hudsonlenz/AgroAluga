@@ -4,9 +4,30 @@ import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, X, Eye, Users, LayoutList, Search, Filter } from "lucide-react";
+import { Check, X, Eye, Users, LayoutList, Search, Filter, BarChart3, TrendingUp, MessageCircle, Star, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
+
+interface KPIs {
+  total_users: number;
+  new_users_7d: number;
+  new_users_30d: number;
+  blocked_users: number;
+  total_listings: number;
+  active_listings: number;
+  pending_listings: number;
+  paused_listings: number;
+  rejected_listings: number;
+  new_listings_7d: number;
+  new_listings_30d: number;
+  total_conversations: number;
+  new_conversations_7d: number;
+  total_messages: number;
+  new_messages_7d: number;
+  total_reviews: number;
+  reported_reviews: number;
+  avg_rating: number;
+}
 
 interface PendingListing {
   id: string;
@@ -44,7 +65,11 @@ interface UserProfile {
 export default function AdminPage() {
   const { user } = useApp();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<"listings" | "users">("listings");
+  const [activeTab, setActiveTab] = useState<"overview" | "listings" | "users">("overview");
+
+  // KPIs state
+  const [kpis, setKpis] = useState<KPIs | null>(null);
+  const [kpisLoading, setKpisLoading] = useState(true);
 
   // Listings state
   const [listings, setListings] = useState<PendingListing[]>([]);
@@ -62,7 +87,14 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => { checkAdmin(); }, [user]);
-  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); } }, [isAdmin, statusFilter]);
+  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); } }, [isAdmin, statusFilter]);
+
+  async function fetchKpis() {
+    setKpisLoading(true);
+    const { data } = await supabase.from("admin_kpis").select("*").single();
+    if (data) setKpis(data);
+    setKpisLoading(false);
+  }
 
   async function fetchPendingCount() {
     const { count } = await supabase
@@ -201,6 +233,12 @@ export default function AdminPage() {
         </div>
         <div className="flex gap-2 bg-secondary rounded-lg p-1">
           <button
+            onClick={() => setActiveTab("overview")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "overview" ? "bg-card shadow text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <BarChart3 className="h-4 w-4" /> Visao Geral
+          </button>
+          <button
             onClick={() => setActiveTab("listings")}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "listings" ? "bg-card shadow text-primary" : "text-muted-foreground hover:text-foreground"}`}
           >
@@ -215,6 +253,112 @@ export default function AdminPage() {
           </button>
         </div>
       </div>
+
+      {/* ABA VISAO GERAL */}
+      {activeTab === "overview" && (
+        <div>
+          {kpisLoading ? (
+            <p className="text-muted-foreground text-sm">Carregando indicadores...</p>
+          ) : kpis ? (
+            <div className="space-y-8">
+
+              {/* Usuarios */}
+              <div>
+                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" /> Usuarios
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total de usuarios", value: kpis.total_users, color: "text-primary" },
+                    { label: "Novos (7 dias)", value: kpis.new_users_7d, color: "text-green-600" },
+                    { label: "Novos (30 dias)", value: kpis.new_users_30d, color: "text-blue-600" },
+                    { label: "Bloqueados", value: kpis.blocked_users, color: "text-destructive" },
+                  ].map((k) => (
+                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
+                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Anuncios */}
+              <div>
+                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
+                  <LayoutList className="h-5 w-5 text-primary" /> Anuncios
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total de anuncios", value: kpis.total_listings, color: "text-primary" },
+                    { label: "Ativos", value: kpis.active_listings, color: "text-green-600" },
+                    { label: "Pendentes", value: kpis.pending_listings, color: "text-yellow-600" },
+                    { label: "Pausados", value: kpis.paused_listings, color: "text-orange-500" },
+                  ].map((k) => (
+                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
+                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                  {[
+                    { label: "Novos (7 dias)", value: kpis.new_listings_7d, color: "text-green-600" },
+                    { label: "Novos (30 dias)", value: kpis.new_listings_30d, color: "text-blue-600" },
+                    { label: "Rejeitados", value: kpis.rejected_listings, color: "text-destructive" },
+                  ].map((k) => (
+                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
+                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Engajamento */}
+              <div>
+                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" /> Engajamento
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total de conversas", value: kpis.total_conversations, color: "text-primary" },
+                    { label: "Novas conversas (7d)", value: kpis.new_conversations_7d, color: "text-green-600" },
+                    { label: "Total de mensagens", value: kpis.total_messages, color: "text-blue-600" },
+                    { label: "Mensagens (7 dias)", value: kpis.new_messages_7d, color: "text-accent-foreground" },
+                  ].map((k) => (
+                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
+                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Qualidade */}
+              <div>
+                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" /> Qualidade
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    { label: "Total de avaliacoes", value: kpis.total_reviews, color: "text-primary" },
+                    { label: "Nota media", value: Number(kpis.avg_rating).toFixed(1) + " ★", color: "text-accent" },
+                    { label: "Avaliacoes reportadas", value: kpis.reported_reviews, color: kpis.reported_reviews > 0 ? "text-destructive" : "text-green-600" },
+                  ].map((k) => (
+                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
+                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Nao foi possivel carregar os indicadores.</p>
+          )}
+        </div>
+      )}
 
       {/* ABA ANÚNCIOS */}
       {activeTab === "listings" && (
