@@ -103,27 +103,36 @@ export default function AdminPage() {
     if (!data) return;
 
     if (growthPeriod <= 90) {
-      // Diário — mostrar todos os pontos
+      // Diario — mostrar todos os pontos
       setGrowthData(data.map((d: any) => ({
         ...d,
         day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
       })));
     } else {
-      // Agrupar por semana para períodos longos
-      const weekly: any[] = [];
-      for (let i = 0; i < data.length; i += 7) {
-        const week = data.slice(i, i + 7);
-        weekly.push({
-          day: new Date(week[0].day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-          total_users: week[week.length - 1].total_users,
-          new_users: week.reduce((s: number, d: any) => s + Number(d.new_users), 0),
-          total_listings: week[week.length - 1].total_listings,
-          new_listings: week.reduce((s: number, d: any) => s + Number(d.new_listings), 0),
-          new_messages: week.reduce((s: number, d: any) => s + Number(d.new_messages), 0),
-          new_conversations: week.reduce((s: number, d: any) => s + Number(d.new_conversations), 0),
-        });
-      }
-      setGrowthData(weekly);
+      // Agrupar por mes para periodos longos
+      const monthly: Record<string, any> = {};
+      data.forEach((d: any) => {
+        const date = new Date(d.day);
+        const key = date.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
+        if (!monthly[key]) {
+          monthly[key] = {
+            day: key,
+            total_users: 0,
+            new_users: 0,
+            total_listings: 0,
+            new_listings: 0,
+            new_messages: 0,
+            new_conversations: 0,
+          };
+        }
+        monthly[key].total_users = Number(d.total_users);
+        monthly[key].total_listings = Number(d.total_listings);
+        monthly[key].new_users += Number(d.new_users);
+        monthly[key].new_listings += Number(d.new_listings);
+        monthly[key].new_messages += Number(d.new_messages);
+        monthly[key].new_conversations += Number(d.new_conversations);
+      });
+      setGrowthData(Object.values(monthly));
     }
   }
 
@@ -132,27 +141,36 @@ export default function AdminPage() {
     if (!data) return;
 
     if (growthPeriod <= 90) {
-      // Diário — mostrar todos os pontos
+      // Diario — mostrar todos os pontos
       setGrowthData(data.map((d: any) => ({
         ...d,
         day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
       })));
     } else {
-      // Agrupar por semana para períodos longos
-      const weekly: any[] = [];
-      for (let i = 0; i < data.length; i += 7) {
-        const week = data.slice(i, i + 7);
-        weekly.push({
-          day: new Date(week[0].day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-          total_users: week[week.length - 1].total_users,
-          new_users: week.reduce((s: number, d: any) => s + Number(d.new_users), 0),
-          total_listings: week[week.length - 1].total_listings,
-          new_listings: week.reduce((s: number, d: any) => s + Number(d.new_listings), 0),
-          new_messages: week.reduce((s: number, d: any) => s + Number(d.new_messages), 0),
-          new_conversations: week.reduce((s: number, d: any) => s + Number(d.new_conversations), 0),
-        });
-      }
-      setGrowthData(weekly);
+      // Agrupar por mes para periodos longos
+      const monthly: Record<string, any> = {};
+      data.forEach((d: any) => {
+        const date = new Date(d.day);
+        const key = date.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
+        if (!monthly[key]) {
+          monthly[key] = {
+            day: key,
+            total_users: 0,
+            new_users: 0,
+            total_listings: 0,
+            new_listings: 0,
+            new_messages: 0,
+            new_conversations: 0,
+          };
+        }
+        monthly[key].total_users = Number(d.total_users);
+        monthly[key].total_listings = Number(d.total_listings);
+        monthly[key].new_users += Number(d.new_users);
+        monthly[key].new_listings += Number(d.new_listings);
+        monthly[key].new_messages += Number(d.new_messages);
+        monthly[key].new_conversations += Number(d.new_conversations);
+      });
+      setGrowthData(Object.values(monthly));
     }
   }
 
