@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
 import NotFound from "./pages/NotFound";
+import MessagesPage from "./pages/MessagesPage";
 import EditListing from "./pages/EditListing";
 import ComoFunciona from "./pages/ComoFunciona";
 import Beneficios from "./pages/Beneficios";
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/cadastro" element={<RegisterPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/criar-anuncio" element={<CreateListing />} />
+                <Route path="/mensagens" element={<MessagesPage />} />
                 <Route path="/editar-anuncio/:id" element={<EditListing />} />
                 <Route path="/como-funciona" element={<ComoFunciona />} />
                 <Route path="/beneficios" element={<Beneficios />} />

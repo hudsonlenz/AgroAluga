@@ -19,7 +19,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/como-funciona" className="hover:text-accent transition-colors">Como Funciona</Link>
           <Link to="/busca" className="hover:text-accent transition-colors">Equipamentos</Link>
-          <Link to="/beneficios" className="hover:text-accent transition-colors">Benefícios</Link>
+          <Link to="/beneficios" className="hover:text-accent transition-colors">Beneficios</Link>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -30,7 +30,12 @@ export default function Navbar() {
                   Dashboard
                 </Button>
               </Link>
-              <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={logout}>
+              <Link to="/mensagens">
+                <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium">
+                  Mensagens
+                </Button>
+              </Link>
+              <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={() => logout()}>
                 Sair
               </Button>
             </>
@@ -55,10 +60,11 @@ export default function Navbar() {
         <div className="md:hidden bg-primary border-t border-primary-medium px-4 pb-4 space-y-2">
           <Link to="/como-funciona" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Como Funciona</Link>
           <Link to="/busca" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Equipamentos</Link>
-          <Link to="/beneficios" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Benefícios</Link>
+          <Link to="/beneficios" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Beneficios</Link>
           {user ? (
             <>
               <Link to="/dashboard" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Dashboard</Link>
+              <Link to="/mensagens" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Mensagens</Link>
               <button className="block py-2 hover:text-accent" onClick={() => { logout(); setOpen(false); }}>Sair</button>
             </>
           ) : (
