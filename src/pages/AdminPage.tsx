@@ -125,6 +125,24 @@ export default function AdminPage() {
     setProcessing(null);
   }
 
+  async function changeListingStatus(id: string, newStatus: string) {
+    setProcessing(id);
+    await supabase.from("listings").update({ status: newStatus }).eq("id", id);
+    setListings((prev) => prev.filter((l) => l.id !== id));
+    if (selected?.id === id) setSelected(null);
+    setProcessing(null);
+    fetchPendingCount();
+  }
+
+  async function deleteListing(id: string) {
+    if (!confirm("Tem certeza que deseja DELETAR este anuncio permanentemente?")) return;
+    setProcessing(id);
+    await supabase.from("listings").delete().eq("id", id);
+    setListings((prev) => prev.filter((l) => l.id !== id));
+    if (selected?.id === id) setSelected(null);
+    setProcessing(null);
+  }
+
   async function toggleAdmin(userId: string, current: boolean) {
     await supabase.from("profiles").update({ is_admin: !current }).eq("id", userId);
     setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, is_admin: !current } : u));
@@ -276,20 +294,51 @@ export default function AdminPage() {
                     <p className="font-medium text-sm mb-1">Descricao:</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">{selected.description}</p>
                   </div>
-                  {statusFilter === "pending" && (
-                    <div className="flex gap-3 pt-2">
-                      <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
-                        onClick={() => approve(selected.id)} disabled={processing === selected.id}>
-                        <Check className="h-4 w-4" />
-                        {processing === selected.id ? "Aprovando..." : "Aprovar"}
-                      </Button>
-                      <Button variant="outline" className="flex-1 text-destructive border-destructive hover:bg-destructive/10 gap-2"
-                        onClick={() => reject(selected.id)} disabled={processing === selected.id}>
-                        <X className="h-4 w-4" />
-                        {processing === selected.id ? "Rejeitando..." : "Rejeitar"}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground uppercase">Acoes do Admin</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {statusFilter === "pending" && (
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                          onClick={() => approve(selected.id)} disabled={processing === selected.id}>
+                          <Check className="h-3.5 w-3.5" /> Aprovar
+                        </Button>
+                      )}
+                      {statusFilter !== "active" && statusFilter !== "pending" && (
+                        <Button size="sm" className="bg-primary text-primary-foreground gap-1"
+                          onClick={() => changeListingStatus(selected.id, "active")} disabled={processing === selected.id}>
+                          <Check className="h-3.5 w-3.5" /> Ativar
+                        </Button>
+                      )}
+                      {statusFilter === "active" && (
+                        <Button size="sm" variant="outline" className="text-yellow-600 border-yellow-400 hover:bg-yellow-50 gap-1"
+                          onClick={() => changeListingStatus(selected.id, "paused")} disabled={processing === selected.id}>
+                          Pausar
+                        </Button>
+                      )}
+                      {statusFilter === "paused" && (
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-400 hover:bg-green-50 gap-1"
+                          onClick={() => changeListingStatus(selected.id, "active")} disabled={processing === selected.id}>
+                          Reativar
+                        </Button>
+                      )}
+                      {statusFilter === "pending" && (
+                        <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive/10 gap-1"
+                          onClick={() => reject(selected.id)} disabled={processing === selected.id}>
+                          <X className="h-3.5 w-3.5" /> Rejeitar
+                        </Button>
+                      )}
+                      {statusFilter !== "pending" && (
+                        <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive/10 gap-1"
+                          onClick={() => changeListingStatus(selected.id, "rejected")} disabled={processing === selected.id}>
+                          <X className="h-3.5 w-3.5" /> Rejeitar
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="text-destructive border-destructive bg-destructive/5 hover:bg-destructive hover:text-white gap-1"
+                        onClick={() => deleteListing(selected.id)} disabled={processing === selected.id}>
+                        Deletar permanentemente
                       </Button>
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground">
