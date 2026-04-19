@@ -202,6 +202,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       images: data.images,
       featured: data.featured,
       status: data.status,
+      latitude: (data as any).latitude,
+      longitude: (data as any).longitude,
     }).select().single();
     if (!error && inserted) {
       setListings((prev) => [mapListing(inserted), ...prev]);

@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { ImagePlus, X } from "lucide-react";
+import { geocodeCity } from "@/lib/geo";
+import { ImagePlus, X, MapPin } from "lucide-react";
 
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function CreateListing() {
   const { user, addListing } = useApp();
@@ -17,6 +19,7 @@ export default function CreateListing() {
   const [form, setForm] = useState({
     title: "", category: "", description: "", price: "", priceUnit: "por hora",
     phone: "", whatsapp: "", email: "",
+    city: user?.city || "", state: user?.state || "",
     availability: ["Seg", "Ter", "Qua", "Qui", "Sex"] as string[],
   });
   const [images, setImages] = useState<string[]>([]);
@@ -55,33 +58,39 @@ export default function CreateListing() {
   const removeImage = (url: string) => setImages((prev) => prev.filter((i) => i !== url));
 
   const handlePublish = async () => {
-    if (!form.title || !form.category || !form.description || !form.price) {
+    if (!form.title || !form.category || !form.description || !form.price || !form.city || !form.state) {
       setError("Preencha todos os campos obrigatorios."); return;
     }
     setError("");
     setLoading(true);
     try {
+      // Geocodificar a cidade do anúncio
+      const coords = await geocodeCity(form.city, form.state);
+
       const finalImages = images.length > 0
         ? images
         : ["https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop"];
+
       await addListing({
         title: form.title,
         category: form.category,
         description: form.description,
         price: parseFloat(form.price),
         priceUnit: form.priceUnit,
-        city: user.city,
-        state: user.state,
+        city: form.city,
+        state: form.state,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
         images: finalImages,
         availability: form.availability,
-        phone: form.phone || user.phone,
-        whatsapp: form.whatsapp || user.phone,
-        email: form.email || user.email,
+        phone: form.phone,
+        whatsapp: form.whatsapp,
+        email: form.email,
         ownerId: user.id,
         ownerName: user.name,
         featured: false,
         status: "active",
-      });
+      } as any);
       navigate("/dashboard");
     } catch (e) {
       setError("Erro ao publicar. Tente novamente.");
@@ -127,6 +136,29 @@ export default function CreateListing() {
           </div>
         </div>
 
+        {/* Localização do serviço */}
+        <div>
+          <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+            <MapPin className="h-3 w-3" /> Localizacao do servico *
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <Input
+              placeholder="Cidade *"
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              className="col-span-2"
+            />
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+            >
+              <option value="">UF *</option>
+              {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+
         {/* Upload de imagens */}
         <div>
           <label className="text-sm font-medium mb-2 block">Fotos do equipamento</label>
@@ -134,11 +166,8 @@ export default function CreateListing() {
             {images.map((url) => (
               <div key={url} className="relative h-24 w-24 rounded-lg overflow-hidden border border-border">
                 <img src={url} alt="preview" className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(url)}
-                  className="absolute top-1 right-1 h-5 w-5 bg-destructive rounded-full flex items-center justify-center"
-                >
+                <button type="button" onClick={() => removeImage(url)}
+                  className="absolute top-1 right-1 h-5 w-5 bg-destructive rounded-full flex items-center justify-center">
                   <X className="h-3 w-3 text-white" />
                 </button>
               </div>
@@ -151,7 +180,7 @@ export default function CreateListing() {
               </label>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Ate 5 fotos. Se nao enviar, usaremos uma imagem padrao.</p>
+          <p className="text-xs text-muted-foreground mt-1">Ate 5 fotos.</p>
         </div>
 
         <div>
