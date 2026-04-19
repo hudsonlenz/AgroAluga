@@ -113,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("listings")
       .select("*")
-      .eq("status", "active")
+      .in("status", ["active"])
       .order("created_at", { ascending: false });
     if (!error && data) {
       setListings(data.map(mapListing));
