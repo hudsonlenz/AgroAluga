@@ -4,3 +4,4 @@ cat > vercel.json << 'EOF'
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
+EOF
