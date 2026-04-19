@@ -1,0 +1,210 @@
+import React, { createContext, useContext, useState, ReactNode } from "react";
+
+export interface Listing {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  price: number;
+  priceUnit: string;
+  city: string;
+  state: string;
+  distance: number;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  availability: string[];
+  phone: string;
+  whatsapp: string;
+  email: string;
+  ownerId: string;
+  ownerName: string;
+  featured: boolean;
+  status: "active" | "expired" | "pending";
+  views: number;
+  contactsRevealed: number;
+  createdAt: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  accountType: "contractor" | "provider";
+}
+
+export interface Review {
+  id: string;
+  listingId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+interface AppState {
+  user: User | null;
+  listings: Listing[];
+  reviews: Review[];
+  revealedContacts: string[];
+  login: (email: string, password: string) => boolean;
+  logout: () => void;
+  register: (user: Omit<User, "id">) => void;
+  revealContact: (listingId: string) => void;
+  addListing: (listing: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => void;
+  updateListing: (id: string, data: Partial<Listing>) => void;
+}
+
+const CATEGORIES = [
+  "Aluguel de Trator",
+  "Colheitadeira",
+  "Plantadeira",
+  "Pulverizador / Defensivos",
+  "Transporte de Grãos",
+  "Manutenção de Implementos",
+  "Irrigação",
+  "Operador + Máquina",
+  "Outros Serviços",
+];
+
+const CITIES = [
+  { city: "Ribeirão Preto", state: "SP" },
+  { city: "Uberlândia", state: "MG" },
+  { city: "Londrina", state: "PR" },
+  { city: "Rio Verde", state: "GO" },
+  { city: "Sorriso", state: "MT" },
+  { city: "Luís Eduardo Magalhães", state: "BA" },
+  { city: "Dourados", state: "MS" },
+  { city: "Cascavel", state: "PR" },
+  { city: "Chapecó", state: "SC" },
+];
+
+const names = [
+  "João Silva", "Maria Oliveira", "Carlos Santos", "Ana Pereira",
+  "Pedro Costa", "Fernanda Souza", "Ricardo Lima", "Juliana Almeida",
+  "Marcos Ribeiro", "Patrícia Ferreira", "Lucas Martins", "Camila Rocha",
+];
+
+function generateMockListings(): Listing[] {
+  const listings: Listing[] = [];
+  for (let i = 0; i < 27; i++) {
+    const loc = CITIES[i % CITIES.length];
+    const cat = CATEGORIES[i % CATEGORIES.length];
+    const owner = names[i % names.length];
+    listings.push({
+      id: `listing-${i + 1}`,
+      title: `${cat} — ${loc.city}`,
+      category: cat,
+      description: `Serviço profissional de ${cat.toLowerCase()} na região de ${loc.city}. Equipamento em excelente estado, operador experiente com mais de 10 anos de atuação no campo. Atendemos toda a região com pontualidade e qualidade garantida.`,
+      price: [80, 120, 150, 200, 90, 100, 130, 250, 70][i % 9],
+      priceUnit: ["por hora", "por hectare", "por hora", "por hectare", "por km", "por hora", "por hectare", "por diária", "por hora"][i % 9],
+      city: loc.city,
+      state: loc.state,
+      distance: Math.floor(Math.random() * 95) + 5,
+      rating: +(3.5 + Math.random() * 1.5).toFixed(1),
+      reviewCount: Math.floor(Math.random() * 40) + 3,
+      images: [`https://images.unsplash.com/photo-${["1625246333195-78d9c38ad449","1574943320219-553eb213f72d","1592982537447-6f2a6a0c8b8b","1530267981375-f0de937f5f13","1586771107445-d3ca888129ff"][i % 5]}?w=600&h=400&fit=crop`],
+      availability: ["Seg", "Ter", "Qua", "Qui", "Sex"].slice(0, 3 + (i % 3)),
+      phone: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
+      whatsapp: `(${14 + (i % 5)}) 9${9000 + i}-${1000 + i * 7}`,
+      email: `${owner.toLowerCase().replace(/ /g, ".")}@email.com`,
+      ownerId: `user-${(i % 4) + 2}`,
+      ownerName: owner,
+      featured: i < 9,
+      status: "active",
+      views: Math.floor(Math.random() * 500) + 50,
+      contactsRevealed: Math.floor(Math.random() * 30),
+      createdAt: new Date(Date.now() - Math.random() * 90 * 86400000).toISOString(),
+    });
+  }
+  return listings;
+}
+
+function generateMockReviews(listings: Listing[]): Review[] {
+  const reviews: Review[] = [];
+  listings.forEach((l) => {
+    const count = Math.min(l.reviewCount, 3);
+    for (let j = 0; j < count; j++) {
+      reviews.push({
+        id: `review-${l.id}-${j}`,
+        listingId: l.id,
+        userName: names[(parseInt(l.id.split("-")[1]) + j) % names.length],
+        rating: Math.floor(Math.random() * 2) + 4,
+        comment: [
+          "Excelente serviço! Muito profissional e pontual.",
+          "Equipamento em ótimo estado, recomendo!",
+          "Bom custo-benefício, atendeu bem nossa demanda.",
+        ][j],
+        date: new Date(Date.now() - Math.random() * 60 * 86400000).toISOString(),
+      });
+    }
+  });
+  return reviews;
+}
+
+const mockListings = generateMockListings();
+const mockReviews = generateMockReviews(mockListings);
+
+const AppContext = createContext<AppState | undefined>(undefined);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [listings, setListings] = useState<Listing[]>(mockListings);
+  const [reviews] = useState<Review[]>(mockReviews);
+  const [revealedContacts, setRevealedContacts] = useState<string[]>([]);
+
+  const login = (email: string, _password: string) => {
+    setUser({
+      id: "user-1",
+      name: "Produtor Teste",
+      email,
+      phone: "(14) 99999-0000",
+      city: "Ribeirão Preto",
+      state: "SP",
+      accountType: "provider",
+    });
+    return true;
+  };
+
+  const logout = () => setUser(null);
+
+  const register = (data: Omit<User, "id">) => {
+    setUser({ ...data, id: "user-" + Date.now() });
+  };
+
+  const revealContact = (listingId: string) => {
+    setRevealedContacts((prev) => [...prev, listingId]);
+  };
+
+  const addListing = (data: Omit<Listing, "id" | "views" | "contactsRevealed" | "createdAt">) => {
+    const newListing: Listing = {
+      ...data,
+      id: "listing-" + Date.now(),
+      views: 0,
+      contactsRevealed: 0,
+      createdAt: new Date().toISOString(),
+    };
+    setListings((prev) => [newListing, ...prev]);
+  };
+
+  const updateListing = (id: string, data: Partial<Listing>) => {
+    setListings((prev) => prev.map((l) => (l.id === id ? { ...l, ...data } : l)));
+  };
+
+  return (
+    <AppContext.Provider value={{ user, listings, reviews, revealedContacts, login, logout, register, revealContact, addListing, updateListing }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
+  return ctx;
+}
+
+export { CATEGORIES };
