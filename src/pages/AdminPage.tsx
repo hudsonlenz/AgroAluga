@@ -65,7 +65,7 @@ interface UserProfile {
 }
 
 export default function AdminPage() {
-  const { user } = useApp();
+  const { user, authLoading } = useApp();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "listings" | "users">("overview");
 
@@ -305,6 +305,7 @@ export default function AdminPage() {
     u.city?.toLowerCase().includes(userSearch.toLowerCase())
   );
 
+  if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
   if (isAdmin === false) return <Navigate to="/" />;
   if (isAdmin === null) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Verificando permissoes...</div>;
