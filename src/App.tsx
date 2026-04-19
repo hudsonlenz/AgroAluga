@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -28,6 +29,15 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { authLoading } = useApp();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Capturar tokens do Supabase na URL (recuperacao de senha, confirmacao de email)
+    const hash = window.location.hash;
+    if (hash.includes("access_token") && hash.includes("type=recovery")) {
+      navigate("/redefinir-senha");
+    }
+  }, []);
 
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-screen">
