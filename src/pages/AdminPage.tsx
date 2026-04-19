@@ -74,8 +74,6 @@ export default function AdminPage() {
   const [growthPeriod, setGrowthPeriod] = useState(30);
 
   // Growth data state
-  const [growthData, setGrowthData] = useState<any[]>([]);
-  const [growthPeriod, setGrowthPeriod] = useState(30);
 
   // KPIs state
   const [kpis, setKpis] = useState<KPIs | null>(null);
