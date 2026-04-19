@@ -29,7 +29,7 @@ interface PendingListing {
 interface UserProfile {
   id: string;
   name: string;
-  email?: string;
+  email: string;
   phone: string;
   city: string;
   state: string;
@@ -37,6 +37,8 @@ interface UserProfile {
   user_code: string;
   created_at: string;
   is_admin: boolean;
+  blocked: boolean;
+  block_reason: string;
 }
 
 export default function AdminPage() {
@@ -90,11 +92,36 @@ export default function AdminPage() {
   async function fetchUsers() {
     setUsersLoading(true);
     const { data } = await supabase
-      .from("profiles")
+      .from("admin_users_view")
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setUsers(data);
     setUsersLoading(false);
+  }
+
+  async function toggleBlock(userId: string, current: boolean) {
+    const reason = current ? null : prompt("Motivo do bloqueio (opcional):");
+    if (!current && reason === null) return; // cancelou
+    await supabase.from("profiles").update({
+      blocked: !current,
+      block_reason: reason || null,
+    }).eq("id", userId);
+    setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, blocked: !current, block_reason: reason || "" } : u));
+  }
+
+  async function sendAdminMessage(userEmail: string, userName: string) {
+    const message = prompt(`Mensagem para ${userName}:`);
+    if (!message) return;
+    await supabase.functions.invoke("notify-new-message", {
+      body: {
+        recipient_email: userEmail,
+        recipient_name: userName,
+        sender_name: "Equipe AgroAluga",
+        listing_title: "Mensagem da Administracao",
+        message_preview: message,
+      },
+    });
+    alert("Mensagem enviada com sucesso!");
   }
 
   async function approve(id: string) {
