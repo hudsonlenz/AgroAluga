@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
 import { Listing } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
-import UserAvatar from "@/components/UserAvatar";
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   return (
@@ -37,15 +36,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             </div>
           )}
         </div>
-
-        {/* Anunciante */}
-        <div className="flex items-center gap-2 pt-1 border-t border-border">
-          <UserAvatar userId={listing.ownerId} name={listing.ownerName} size="sm" />
-          <span className="text-xs text-muted-foreground truncate">{listing.ownerName}</span>
-        </div>
-
         <Link to={`/anuncio/${listing.id}`}>
-          <Button className="w-full mt-1 bg-primary hover:bg-primary-medium text-primary-foreground font-medium" size="sm">
+          <Button className="w-full mt-2 bg-primary hover:bg-primary-medium text-primary-foreground font-medium" size="sm">
             Ver Detalhes
           </Button>
         </Link>
