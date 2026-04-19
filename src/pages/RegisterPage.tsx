@@ -126,3 +126,20 @@ export default function RegisterPage() {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.terms} onChange={(e) => set("terms", e.target.checked)} className="rounded" disabled={loading} />
             Aceito os <span className="text-primary font-medium hover:underline cursor-pointer">termos de uso</span>
+          </label>
+          <Button
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Criando conta..." : "Criar conta grátis"}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Já tem conta?{" "}
+            <Link to="/login" className="text-primary font-medium hover:underline">Entrar</Link>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
