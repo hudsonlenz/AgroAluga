@@ -25,8 +25,9 @@ import Beneficios from "./pages/Beneficios";
 
 const queryClient = new QueryClient();
 
-function AppContent() {
+function AppRoutes() {
   const { authLoading } = useApp();
+
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="flex flex-col items-center gap-3">
@@ -35,33 +36,32 @@ function AppContent() {
       </div>
     </div>
   );
+
   return (
-    <HashRouter>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/busca" element={<SearchPage />} />
-            <Route path="/anuncio/:id" element={<ListingDetail />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/cadastro" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/criar-anuncio" element={<CreateListing />} />
-            <Route path="/como-funciona" element={<ComoFunciona />} />
-            <Route path="/beneficios" element={<Beneficios />} />
-            <Route path="/mensagens" element={<MessagesPage />} />
-            <Route path="/perfil" element={<ProfilePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/editar-anuncio/:id" element={<EditListing />} />
-            <Route path="/termos" element={<TermosPage />} />
-            <Route path="/privacidade" element={<PrivacidadePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </HashRouter>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/busca" element={<SearchPage />} />
+          <Route path="/anuncio/:id" element={<ListingDetail />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/cadastro" element={<RegisterPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/criar-anuncio" element={<CreateListing />} />
+          <Route path="/como-funciona" element={<ComoFunciona />} />
+          <Route path="/beneficios" element={<Beneficios />} />
+          <Route path="/mensagens" element={<MessagesPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/editar-anuncio/:id" element={<EditListing />} />
+          <Route path="/termos" element={<TermosPage />} />
+          <Route path="/privacidade" element={<PrivacidadePage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -72,30 +72,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <HashRouter>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/busca" element={<SearchPage />} />
-                <Route path="/anuncio/:id" element={<ListingDetail />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/cadastro" element={<RegisterPage />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/criar-anuncio" element={<CreateListing />} />
-                <Route path="/perfil" element={<ProfilePage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/mensagens" element={<MessagesPage />} />
-                <Route path="/editar-anuncio/:id" element={<EditListing />} />
-                <Route path="/como-funciona" element={<ComoFunciona />} />
-                <Route path="/beneficios" element={<Beneficios />} />
-                <Route path="/termos" element={<TermosPage />} />
-                <Route path="/privacidade" element={<PrivacidadePage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
+          <AppRoutes />
         </HashRouter>
       </AppProvider>
     </TooltipProvider>
