@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -23,14 +23,18 @@ interface Conversation {
   created_at: string;
   listing?: { title: string; images: string[] };
   other_user?: { name: string };
-  last_message?: Message;
-  unread_count?: number;
 }
 
 export default function MessagesPage() {
   const { user } = useApp();
+  const [searchParams] = useSearchParams();
+  const newListingId = searchParams.get("listing");
+  const newSellerId = searchParams.get("seller");
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
+  const [pendingNew, setPendingNew] = useState<{ listingId: string; sellerId: string } | null>(null);
+  const [pendingListing, setPendingListing] = useState<{ title: string; images: string[] } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -47,7 +51,6 @@ export default function MessagesPage() {
     fetchMessages(selected.id);
     markAsRead(selected.id);
 
-    // Realtime — escuta novas mensagens
     const channel = supabase
       .channel(`messages:${selected.id}`)
       .on("postgres_changes", {
@@ -88,7 +91,27 @@ export default function MessagesPage() {
         other_user: user.id === c.buyer_id ? c.seller : c.buyer,
       }));
       setConversations(convs);
-      if (convs.length > 0 && !selected) setSelected(convs[0]);
+
+      // Se veio da página do anúncio
+      if (newListingId && newSellerId) {
+        const existing = convs.find((c) => c.listing_id === newListingId && c.buyer_id === user.id);
+        if (existing) {
+          setSelected(existing);
+          setPendingNew(null);
+        } else {
+          // Buscar dados do anúncio para mostrar no header
+          const { data: listingData } = await supabase
+            .from("listings")
+            .select("title, images")
+            .eq("id", newListingId)
+            .single();
+          setPendingListing(listingData);
+          setPendingNew({ listingId: newListingId, sellerId: newSellerId });
+          setSelected(null);
+        }
+      } else if (convs.length > 0) {
+        setSelected(convs[0]);
+      }
     }
     setLoading(false);
   }
@@ -111,9 +134,48 @@ export default function MessagesPage() {
   }
 
   async function sendMessage() {
-    if (!input.trim() || !selected) return;
+    if (!input.trim()) return;
     const content = input.trim();
     setInput("");
+
+    // Se é uma nova conversa, criar primeiro
+    if (pendingNew) {
+      const { data: conv, error } = await supabase
+        .from("conversations")
+        .insert({
+          listing_id: pendingNew.listingId,
+          buyer_id: user.id,
+          seller_id: pendingNew.sellerId,
+        })
+        .select(`
+          *,
+          listing:listings(title, images),
+          seller:profiles!conversations_seller_id_fkey(name)
+        `)
+        .single();
+
+      if (error || !conv) return;
+
+      const newConv = {
+        ...conv,
+        listing: conv.listing,
+        other_user: conv.seller,
+      };
+
+      setConversations((prev) => [newConv, ...prev]);
+      setSelected(newConv);
+      setPendingNew(null);
+      setPendingListing(null);
+
+      await supabase.from("messages").insert({
+        conversation_id: conv.id,
+        sender_id: user.id,
+        content,
+      });
+      return;
+    }
+
+    if (!selected) return;
     await supabase.from("messages").insert({
       conversation_id: selected.id,
       sender_id: user.id,
@@ -125,13 +187,21 @@ export default function MessagesPage() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  const activeHeader = pendingNew
+    ? { name: "", title: pendingListing?.title || "Novo anuncio", image: pendingListing?.images?.[0] }
+    : selected
+    ? { name: selected.other_user?.name || "", title: selected.listing?.title || "", image: selected.listing?.images?.[0] }
+    : null;
+
   if (loading) return (
     <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">
       Carregando mensagens...
     </div>
   );
 
-  if (conversations.length === 0) return (
+  const hasContent = conversations.length > 0 || pendingNew;
+
+  if (!hasContent) return (
     <div className="container mx-auto px-4 py-20 text-center">
       <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
       <p className="text-muted-foreground mb-4">Voce ainda nao tem conversas.</p>
@@ -155,8 +225,8 @@ export default function MessagesPage() {
             {conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => setSelected(conv)}
-                className={`w-full text-left p-3 border-b border-border hover:bg-secondary transition-colors ${selected?.id === conv.id ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}
+                onClick={() => { setSelected(conv); setPendingNew(null); }}
+                className={`w-full text-left p-3 border-b border-border hover:bg-secondary transition-colors ${selected?.id === conv.id && !pendingNew ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}
               >
                 <div className="flex items-center gap-3">
                   <img
@@ -176,28 +246,29 @@ export default function MessagesPage() {
 
         {/* Área de chat */}
         <div className="md:col-span-2 border border-border rounded-lg overflow-hidden flex flex-col">
-          {selected ? (
+          {activeHeader ? (
             <>
-              {/* Header */}
               <div className="p-3 border-b border-border bg-secondary flex items-center gap-3">
                 <img
-                  src={selected.listing?.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
+                  src={activeHeader.image || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
                   alt=""
                   className="h-8 w-8 rounded-md object-cover"
                 />
                 <div>
-                  <p className="font-medium text-sm">{selected.other_user?.name}</p>
-                  <Link to={`/anuncio/${selected.listing_id}`} className="text-xs text-primary hover:underline">
-                    {selected.listing?.title}
-                  </Link>
+                  {activeHeader.name && <p className="font-medium text-sm">{activeHeader.name}</p>}
+                  <p className="text-xs text-primary">{activeHeader.title}</p>
                 </div>
               </div>
 
-              {/* Mensagens */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.length === 0 && (
+                {pendingNew && (
                   <p className="text-center text-sm text-muted-foreground py-8">
-                    Nenhuma mensagem ainda. Inicie a conversa!
+                    Envie uma mensagem para iniciar a conversa!
+                  </p>
+                )}
+                {!pendingNew && messages.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    Nenhuma mensagem ainda.
                   </p>
                 )}
                 {messages.map((msg) => {
@@ -216,7 +287,6 @@ export default function MessagesPage() {
                 <div ref={bottomRef} />
               </div>
 
-              {/* Input */}
               <div className="p-3 border-t border-border flex gap-2">
                 <Input
                   value={input}
