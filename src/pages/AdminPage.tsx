@@ -400,24 +400,32 @@ export default function AdminPage() {
                 <tr>
                   <th className="text-left p-3 font-medium text-muted-foreground">Usuario</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">Codigo</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">E-mail</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">Localizacao</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">Cadastro</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Admin</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 {usersLoading ? (
-                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
                 ) : filteredUsers.length === 0 ? (
-                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum usuario encontrado.</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum usuario encontrado.</td></tr>
                 ) : filteredUsers.map((u, i) => (
-                  <tr key={u.id} className={`border-t border-border hover:bg-secondary/50 transition-colors ${i % 2 === 0 ? "" : "bg-secondary/20"}`}>
+                  <tr key={u.id} className={`border-t border-border hover:bg-secondary/50 transition-colors ${(u as any).blocked ? "bg-destructive/5" : i % 2 === 0 ? "" : "bg-secondary/20"}`}>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <UserAvatar userId={u.id} name={u.name || ""} size="sm" />
                         <div>
-                          <p className="font-medium">{u.name}</p>
-                          <p className="text-xs text-muted-foreground">{u.phone}</p>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <p className="font-medium">{u.name}</p>
+                            {(u as any).blocked && <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full">Bloqueado</span>}
+                            {u.is_admin && <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">Admin</span>}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{u.phone || "—"}</p>
+                          {(u as any).blocked && (u as any).block_reason && (
+                            <p className="text-xs text-destructive">Motivo: {(u as any).block_reason}</p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -426,7 +434,10 @@ export default function AdminPage() {
                         {u.user_code || "—"}
                       </span>
                     </td>
-                    <td className="p-3 text-muted-foreground">
+                    <td className="p-3 text-muted-foreground text-xs">
+                      {(u as any).email || "—"}
+                    </td>
+                    <td className="p-3 text-muted-foreground text-xs">
                       {u.city && u.state ? `${u.city}, ${u.state}` : "—"}
                     </td>
                     <td className="p-3 text-muted-foreground text-xs">
@@ -436,12 +447,26 @@ export default function AdminPage() {
                       {u.id === user.id ? (
                         <span className="text-xs text-muted-foreground">Voce</span>
                       ) : (
-                        <button
-                          onClick={() => toggleAdmin(u.id, u.is_admin)}
-                          className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${u.is_admin ? "bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive" : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
-                        >
-                          {u.is_admin ? "Admin ✓" : "Tornar admin"}
-                        </button>
+                        <div className="flex gap-1 flex-wrap">
+                          <button
+                            onClick={() => sendAdminMessage((u as any).email, u.name)}
+                            className="text-xs px-2 py-1 rounded font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            Mensagem
+                          </button>
+                          <button
+                            onClick={() => toggleBlock(u.id, (u as any).blocked)}
+                            className={`text-xs px-2 py-1 rounded font-medium transition-colors ${(u as any).blocked ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-destructive/10 text-destructive hover:bg-destructive/20"}`}
+                          >
+                            {(u as any).blocked ? "Desbloquear" : "Bloquear"}
+                          </button>
+                          <button
+                            onClick={() => toggleAdmin(u.id, u.is_admin)}
+                            className={`text-xs px-2 py-1 rounded font-medium transition-colors ${u.is_admin ? "bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive" : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
+                          >
+                            {u.is_admin ? "Admin ✓" : "+ Admin"}
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
