@@ -39,7 +39,7 @@ export default function Index() {
             Alugue equipamentos agrícolas de produtores da sua região
           </h1>
           <p className="text-lg text-primary-foreground/80 mb-8">
-            Conectamos quem precisa de máquinas e serviços agrícolas com fornecedores próximos. Rápido, seguro e acessível.
+            Alugue o que precisa. Anuncie o que tem. O agronegocio mais conectado comeca aqui.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
             <Input

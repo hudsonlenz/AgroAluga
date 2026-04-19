@@ -10,36 +10,48 @@ export default function Footer() {
             <Tractor className="h-6 w-6 text-accent" />
             AgroAluga
           </div>
-          <p className="text-sm opacity-80">Conectando produtores rurais a serviços e equipamentos agrícolas na sua região.</p>
+          <p className="text-sm opacity-80">
+            Alugue o que precisa. Anuncie o que tem. O agronegocio mais conectado comeca aqui.
+          </p>
         </div>
         <div>
           <h4 className="font-heading font-semibold mb-3 text-accent">Plataforma</h4>
           <ul className="space-y-2 text-sm opacity-80">
-            <li><Link to="/busca" className="hover:text-accent">Buscar Equipamentos</Link></li>
-            <li><Link to="/cadastro" className="hover:text-accent">Cadastrar</Link></li>
-            <li><Link to="/login" className="hover:text-accent">Entrar</Link></li>
+            <li><Link to="/busca" className="hover:text-accent transition-colors">Buscar Equipamentos</Link></li>
+            <li><Link to="/busca?type=servico" className="hover:text-accent transition-colors">Buscar Servicos</Link></li>
+            <li><Link to="/criar-anuncio" className="hover:text-accent transition-colors">Anunciar Gratuitamente</Link></li>
+            <li><Link to="/como-funciona" className="hover:text-accent transition-colors">Como Funciona</Link></li>
+            <li><Link to="/beneficios" className="hover:text-accent transition-colors">Beneficios</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="font-heading font-semibold mb-3 text-accent">Categorias</h4>
           <ul className="space-y-2 text-sm opacity-80">
-            <li>Aluguel de Trator</li>
-            <li>Colheitadeira</li>
-            <li>Pulverizador</li>
-            <li>Irrigação</li>
+            <li><Link to="/busca?category=Tratores e Implementos" className="hover:text-accent transition-colors">Tratores e Implementos</Link></li>
+            <li><Link to="/busca?category=Drones Agricolas" className="hover:text-accent transition-colors">Drones Agricolas</Link></li>
+            <li><Link to="/busca?category=Fotografia e Mapeamento Aereo" className="hover:text-accent transition-colors">Mapeamento Aereo</Link></li>
+            <li><Link to="/busca?category=Colheitadeiras" className="hover:text-accent transition-colors">Colheitadeiras</Link></li>
+            <li><Link to="/busca?type=servico" className="hover:text-accent transition-colors">Ver todos os servicos</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="font-heading font-semibold mb-3 text-accent">Contato</h4>
           <ul className="space-y-2 text-sm opacity-80">
-            <li>contato@agroaluga.com.br</li>
-            <li>(11) 99999-0000</li>
-            <li>São Paulo, SP</li>
+            <li>
+              <a href="mailto:agroaluga@outlook.com" className="hover:text-accent transition-colors">
+                agroaluga@outlook.com
+              </a>
+            </li>
+            <li>Santa Catarina, Brasil</li>
           </ul>
         </div>
       </div>
-      <div className="container mx-auto px-4 mt-8 pt-6 border-t border-primary-medium text-center text-sm opacity-60">
-        © 2026 AgroAluga. Todos os direitos reservados.
+      <div className="container mx-auto px-4 mt-8 pt-6 border-t border-primary-medium flex flex-col md:flex-row items-center justify-between gap-2 text-sm opacity-60">
+        <span>© 2026 AgroAluga. Todos os direitos reservados.</span>
+        <div className="flex gap-4">
+          <Link to="/termos" className="hover:text-accent transition-colors">Termos de Uso</Link>
+          <Link to="/privacidade" className="hover:text-accent transition-colors">Politica de Privacidade</Link>
+        </div>
       </div>
     </footer>
   );

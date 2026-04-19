@@ -13,6 +13,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
+import TermosPage from "./pages/TermosPage";
+import PrivacidadePage from "./pages/PrivacidadePage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
@@ -47,6 +49,8 @@ const App = () => (
                 <Route path="/editar-anuncio/:id" element={<EditListing />} />
                 <Route path="/como-funciona" element={<ComoFunciona />} />
                 <Route path="/beneficios" element={<Beneficios />} />
+                <Route path="/termos" element={<TermosPage />} />
+                <Route path="/privacidade" element={<PrivacidadePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
