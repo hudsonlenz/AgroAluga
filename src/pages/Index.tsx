@@ -7,7 +7,12 @@ import { useApp, CATEGORIES } from "@/contexts/AppContext";
 import ListingCard from "@/components/ListingCard";
 import heroBg from "@/assets/hero-bg.jpg";
 
-const CATEGORY_ICONS = [Tractor, Wheat, Sprout, Droplets, Truck, Wrench, Droplets, Users, BarChart3];
+const CATEGORY_ICONS: any[] = [
+  Tractor, Wheat, Sprout, Droplets, Truck, Wrench,
+  Droplets, Users, BarChart3, Tractor, Wheat, Sprout,
+  Droplets, Truck, Wrench, Droplets, Users, BarChart3,
+  Tractor, Wheat, Sprout, Droplets, Truck, Wrench, Droplets,
+];
 
 export default function Index() {
   const { listings } = useApp();
