@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Menu, X, Tractor } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import UserAvatar from "@/components/UserAvatar";
 
 export default function Navbar() {
   const { user, logout } = useApp();
@@ -50,6 +51,9 @@ export default function Navbar() {
                   </Button>
                 </Link>
               )}
+              <Link to="/perfil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <UserAvatar userId={user.id} name={user.name} size="sm" />
+              </Link>
               <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-primary-medium" onClick={() => logout()}>
                 Sair
               </Button>
@@ -80,6 +84,7 @@ export default function Navbar() {
             <>
               <Link to="/dashboard" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Dashboard</Link>
               <Link to="/mensagens" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Mensagens</Link>
+              <Link to="/perfil" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Meu Perfil</Link>
               {isAdmin && (
                 <Link to="/admin" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Admin</Link>
               )}

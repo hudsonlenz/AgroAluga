@@ -30,6 +30,7 @@ export interface Listing {
 }
 
 export interface User {
+  avatarUrl?: string | null;
   id: string;
   name: string;
   email: string;
@@ -69,6 +70,7 @@ interface AppState {
   authLoading: boolean;
   listingsLoading: boolean;
   login: (email: string, password: string) => Promise<AuthError | null>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   logout: () => Promise<void>;
   register: (data: RegisterData) => Promise<AuthError | null>;
   revealContact: (listingId: string) => void;

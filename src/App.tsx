@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import CreateListing from "./pages/CreateListing";
 import NotFound from "./pages/NotFound";
+import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import MessagesPage from "./pages/MessagesPage";
 import EditListing from "./pages/EditListing";
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/cadastro" element={<RegisterPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/criar-anuncio" element={<CreateListing />} />
+                <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/mensagens" element={<MessagesPage />} />
                 <Route path="/editar-anuncio/:id" element={<EditListing />} />
