@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, X, Eye, Users, LayoutList, Search, Filter, BarChart3, TrendingUp, MessageCircle, Star, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -71,6 +72,9 @@ export default function AdminPage() {
   // Growth data state
   const [growthData, setGrowthData] = useState<any[]>([]);
 
+  // Growth data state
+  const [growthData, setGrowthData] = useState<any[]>([]);
+
   // KPIs state
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
@@ -92,6 +96,19 @@ export default function AdminPage() {
 
   useEffect(() => { checkAdmin(); }, [user]);
   useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); fetchGrowthData(); } }, [isAdmin, statusFilter]);
+
+  async function fetchGrowthData() {
+    const { data } = await supabase
+      .from("admin_daily_growth")
+      .select("*")
+      .order("day", { ascending: true });
+    if (data) {
+      setGrowthData(data.map((d: any) => ({
+        ...d,
+        day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      })));
+    }
+  }
 
   async function fetchGrowthData() {
     const { data } = await supabase
