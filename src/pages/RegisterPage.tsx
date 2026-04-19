@@ -4,11 +4,12 @@ import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tractor } from "lucide-react";
+import TermosModal from "@/components/TermosModal";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function RegisterPage() {
-  const { register } = useApp();
+  const { register, authLoading } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "", email: "", password: "", confirmPassword: "",
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [termosOpen, setTermosOpen] = useState(false);
 
   const set = (k: string, v: string | boolean) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -27,7 +29,7 @@ export default function RegisterPage() {
     }
     if (form.password.length < 6) { setError("A senha deve ter no minimo 6 caracteres."); return; }
     if (form.password !== form.confirmPassword) { setError("As senhas nao coincidem."); return; }
-    if (!form.terms) { setError("Aceite os termos de uso."); return; }
+    if (!form.terms) { setError("Voce precisa aceitar os termos de uso para continuar."); return; }
 
     setLoading(true);
     setError("");
@@ -91,27 +93,64 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3">
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={form.state}
-              onChange={(e) => set("state", e.target.value)}
-              disabled={loading}
+              value={form.state} onChange={(e) => set("state", e.target.value)} disabled={loading}
             >
               <option value="">Estado *</option>
               {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <Input placeholder="Cidade *" value={form.city} onChange={(e) => set("city", e.target.value)} disabled={loading} />
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.terms} onChange={(e) => set("terms", e.target.checked)} className="rounded" disabled={loading} />
-            Aceito os <span className="text-primary font-medium hover:underline cursor-pointer">termos de uso</span>
-          </label>
-          <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold" type="submit" disabled={loading}>
+
+          {/* Termos de uso */}
+          <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${form.terms ? "border-primary bg-primary/5" : "border-border"}`}>
+            <input
+              type="checkbox"
+              checked={form.terms}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setTermosOpen(true);
+                } else {
+                  set("terms", false);
+                }
+              }}
+              className="mt-0.5 rounded"
+              disabled={loading}
+            />
+            <p className="text-sm text-muted-foreground">
+              Li e aceito os{" "}
+              <button
+                type="button"
+                onClick={() => setTermosOpen(true)}
+                className="text-primary font-medium hover:underline"
+              >
+                Termos de Uso
+              </button>
+              {" "}e a{" "}
+              <Link to="/privacidade" target="_blank" className="text-primary font-medium hover:underline">
+                Politica de Privacidade
+              </Link>
+            </p>
+          </div>
+
+          <Button
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Criando conta..." : "Criar conta gratis"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Ja tem conta? <Link to="/login" className="text-primary font-medium hover:underline">Entrar</Link>
+            Ja tem conta?{" "}
+            <Link to="/login" className="text-primary font-medium hover:underline">Entrar</Link>
           </p>
         </form>
       </div>
+
+      <TermosModal
+        open={termosOpen}
+        onAccept={() => { set("terms", true); setTermosOpen(false); }}
+        onClose={() => setTermosOpen(false)}
+      />
     </div>
   );
 }
