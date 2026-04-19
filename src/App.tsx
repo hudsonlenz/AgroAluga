@@ -22,6 +22,7 @@ import MessagesPage from "./pages/MessagesPage";
 import EditListing from "./pages/EditListing";
 import ComoFunciona from "./pages/ComoFunciona";
 import Beneficios from "./pages/Beneficios";
+import RedefinirSenhaPage from "./pages/RedefinirSenhaPage";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ function AppRoutes() {
           <Route path="/editar-anuncio/:id" element={<EditListing />} />
           <Route path="/termos" element={<TermosPage />} />
           <Route path="/privacidade" element={<PrivacidadePage />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
