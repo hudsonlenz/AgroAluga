@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [selected, setSelected] = useState<PendingListing | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState<"pending" | "active" | "paused" | "rejected">("pending");
   const [userFilter, setUserFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -59,7 +60,15 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => { checkAdmin(); }, [user]);
-  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); } }, [isAdmin, statusFilter]);
+  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); } }, [isAdmin, statusFilter]);
+
+  async function fetchPendingCount() {
+    const { count } = await supabase
+      .from("listings")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+    setPendingCount(count || 0);
+  }
 
   async function checkAdmin() {
     if (!user) { setIsAdmin(false); return; }
@@ -173,8 +182,8 @@ export default function AdminPage() {
                   onClick={() => { setStatusFilter(s); setSelected(null); }}
                   className={statusFilter === s ? "bg-primary text-primary-foreground" : ""}>
                   {s === "pending" ? "Pendentes" : s === "active" ? "Ativos" : s === "paused" ? "Pausados" : "Rejeitados"}
-                  {s === "pending" && listings.length > 0 && statusFilter !== "pending" && (
-                    <span className="ml-1 bg-accent text-accent-foreground text-xs px-1.5 rounded-full">{listings.length}</span>
+                  {s === "pending" && pendingCount > 0 && statusFilter !== "pending" && (
+                    <span className="ml-1 bg-accent text-accent-foreground text-xs px-1.5 rounded-full">{pendingCount}</span>
                   )}
                 </Button>
               ))}
