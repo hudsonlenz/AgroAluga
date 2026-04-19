@@ -28,7 +28,7 @@ export default function Beneficios() {
               { icon: Clock, title: "Agilidade na busca", description: "Compare múltiplos fornecedores em minutos, sem precisar ligar para vários lugares ou depender de indicação boca a boca." },
               { icon: Star, title: "Avaliações reais", description: "Acesse avaliações de outros produtores rurais que já contrataram o serviço. Contrate com segurança e confiança." },
               { icon: Banknote, title: "Preços transparentes", description: "Veja os preços diretamente nos anúncios antes de entrar em contato. Sem surpresas na hora de fechar o negócio." },
-              { icon: ShieldCheck, title: "Plataforma segura", description: "Seus dados são protegidos. O contato do fornecedor só é liberado após confirmação, evitando abordagens indesejadas." },
+              { icon: ShieldCheck, title: "Plataforma segura", description: "Seus dados são protegidos e os contatos dos fornecedores ficam disponíveis diretamente na plataforma, sem intermediários." },
               { icon: Headphones, title: "Suporte dedicado", description: "Nossa equipe está disponível para ajudar em caso de dúvidas ou problemas durante a contratação." },
             ].map((item) => (
               <div key={item.title} className="flex flex-col gap-3 p-6 bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
@@ -59,7 +59,7 @@ export default function Beneficios() {
               { icon: TrendingUp, title: "Aumente sua renda", description: "Coloque seus equipamentos parados para gerar renda. Alugue nos períodos em que não está utilizando." },
               { icon: Lock, title: "Controle total", description: "Você define preço, disponibilidade e região de atendimento. Nenhum contato é liberado sem sua confirmação." },
               { icon: Star, title: "Construa reputação", description: "Acumule avaliações positivas e se torne referência na sua região. Boa reputação atrai mais clientes." },
-              { icon: Banknote, title: "Cadastro gratuito", description: "Criar sua conta e publicar anúncios é totalmente gratuito. Você só paga quando clientes te encontrarem." },
+              { icon: Banknote, title: "100% gratuito", description: "Criar sua conta e publicar anúncios é totalmente gratuito. Sem mensalidade, sem taxas — anuncie à vontade." },
               { icon: Headphones, title: "Suporte especializado", description: "Conte com o suporte da AgroAluga para tirar dúvidas sobre como anunciar melhor e alcançar mais clientes." },
             ].map((item) => (
               <div key={item.title} className="flex flex-col gap-3 p-6 bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
