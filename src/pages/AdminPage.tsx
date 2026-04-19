@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, X, Eye, Users, LayoutList, Search, Filter, BarChart3, TrendingUp, MessageCircle, Star, AlertTriangle } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -67,6 +68,9 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "listings" | "users">("overview");
 
+  // Growth data state
+  const [growthData, setGrowthData] = useState<any[]>([]);
+
   // KPIs state
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [kpisLoading, setKpisLoading] = useState(true);
@@ -87,7 +91,20 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => { checkAdmin(); }, [user]);
-  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); } }, [isAdmin, statusFilter]);
+  useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); fetchGrowthData(); } }, [isAdmin, statusFilter]);
+
+  async function fetchGrowthData() {
+    const { data } = await supabase
+      .from("admin_daily_growth")
+      .select("*")
+      .order("day", { ascending: true });
+    if (data) {
+      setGrowthData(data.map((d: any) => ({
+        ...d,
+        day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      })));
+    }
+  }
 
   async function fetchKpis() {
     setKpisLoading(true);
@@ -260,99 +277,139 @@ export default function AdminPage() {
           {kpisLoading ? (
             <p className="text-muted-foreground text-sm">Carregando indicadores...</p>
           ) : kpis ? (
-            <div className="space-y-8">
+            <div className="grid md:grid-cols-4 gap-6">
 
-              {/* Usuarios */}
-              <div>
-                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" /> Usuarios
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: "Total de usuarios", value: kpis.total_users, color: "text-primary" },
-                    { label: "Novos (7 dias)", value: kpis.new_users_7d, color: "text-green-600" },
-                    { label: "Novos (30 dias)", value: kpis.new_users_30d, color: "text-blue-600" },
-                    { label: "Bloqueados", value: kpis.blocked_users, color: "text-destructive" },
-                  ].map((k) => (
-                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
-                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                    </div>
-                  ))}
+              {/* Coluna de KPIs */}
+              <div className="md:col-span-1 space-y-3">
+
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-1"><Users className="h-3.5 w-3.5" /> Usuarios</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Total", value: kpis.total_users, color: "text-primary" },
+                      { label: "Novos (7d)", value: kpis.new_users_7d, color: "text-green-600" },
+                      { label: "Novos (30d)", value: kpis.new_users_30d, color: "text-blue-600" },
+                      { label: "Bloqueados", value: kpis.blocked_users, color: "text-destructive" },
+                    ].map((k) => (
+                      <div key={k.label} className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{k.label}</span>
+                        <span className={`text-sm font-bold ${k.color}`}>{k.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-1"><LayoutList className="h-3.5 w-3.5" /> Anuncios</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Total", value: kpis.total_listings, color: "text-primary" },
+                      { label: "Ativos", value: kpis.active_listings, color: "text-green-600" },
+                      { label: "Pendentes", value: kpis.pending_listings, color: "text-yellow-600" },
+                      { label: "Pausados", value: kpis.paused_listings, color: "text-orange-500" },
+                      { label: "Rejeitados", value: kpis.rejected_listings, color: "text-destructive" },
+                      { label: "Novos (7d)", value: kpis.new_listings_7d, color: "text-blue-600" },
+                      { label: "Novos (30d)", value: kpis.new_listings_30d, color: "text-blue-400" },
+                    ].map((k) => (
+                      <div key={k.label} className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{k.label}</span>
+                        <span className={`text-sm font-bold ${k.color}`}>{k.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> Engajamento</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Conversas", value: kpis.total_conversations, color: "text-primary" },
+                      { label: "Novas (7d)", value: kpis.new_conversations_7d, color: "text-green-600" },
+                      { label: "Mensagens", value: kpis.total_messages, color: "text-blue-600" },
+                      { label: "Msg (7d)", value: kpis.new_messages_7d, color: "text-blue-400" },
+                    ].map((k) => (
+                      <div key={k.label} className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{k.label}</span>
+                        <span className={`text-sm font-bold ${k.color}`}>{k.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-1"><Star className="h-3.5 w-3.5" /> Qualidade</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Avaliacoes", value: kpis.total_reviews, color: "text-primary" },
+                      { label: "Nota media", value: Number(kpis.avg_rating).toFixed(1) + " ★", color: "text-accent" },
+                      { label: "Reportadas", value: kpis.reported_reviews, color: kpis.reported_reviews > 0 ? "text-destructive" : "text-green-600" },
+                    ].map((k) => (
+                      <div key={k.label} className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{k.label}</span>
+                        <span className={`text-sm font-bold ${k.color}`}>{k.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
 
-              {/* Anuncios */}
-              <div>
-                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
-                  <LayoutList className="h-5 w-5 text-primary" /> Anuncios
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: "Total de anuncios", value: kpis.total_listings, color: "text-primary" },
-                    { label: "Ativos", value: kpis.active_listings, color: "text-green-600" },
-                    { label: "Pendentes", value: kpis.pending_listings, color: "text-yellow-600" },
-                    { label: "Pausados", value: kpis.paused_listings, color: "text-orange-500" },
-                  ].map((k) => (
-                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
-                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                  {[
-                    { label: "Novos (7 dias)", value: kpis.new_listings_7d, color: "text-green-600" },
-                    { label: "Novos (30 dias)", value: kpis.new_listings_30d, color: "text-blue-600" },
-                    { label: "Rejeitados", value: kpis.rejected_listings, color: "text-destructive" },
-                  ].map((k) => (
-                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
-                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Coluna de Gráficos */}
+              <div className="md:col-span-3 space-y-6">
 
-              {/* Engajamento */}
-              <div>
-                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-primary" /> Engajamento
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: "Total de conversas", value: kpis.total_conversations, color: "text-primary" },
-                    { label: "Novas conversas (7d)", value: kpis.new_conversations_7d, color: "text-green-600" },
-                    { label: "Total de mensagens", value: kpis.total_messages, color: "text-blue-600" },
-                    { label: "Mensagens (7 dias)", value: kpis.new_messages_7d, color: "text-accent-foreground" },
-                  ].map((k) => (
-                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
-                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                    </div>
-                  ))}
+                {/* Crescimento de usuários */}
+                <div className="bg-card border border-border rounded-lg p-5">
+                  <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" /> Crescimento de Usuarios (30 dias)
+                  </h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={growthData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={4} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="total_users" name="Total" stroke="#2d5a1b" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="new_users" name="Novos/dia" stroke="#86c44e" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
 
-              {/* Qualidade */}
-              <div>
-                <h2 className="text-lg font-heading font-semibold mb-4 flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" /> Qualidade
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { label: "Total de avaliacoes", value: kpis.total_reviews, color: "text-primary" },
-                    { label: "Nota media", value: Number(kpis.avg_rating).toFixed(1) + " ★", color: "text-accent" },
-                    { label: "Avaliacoes reportadas", value: kpis.reported_reviews, color: kpis.reported_reviews > 0 ? "text-destructive" : "text-green-600" },
-                  ].map((k) => (
-                    <div key={k.label} className="bg-card border border-border rounded-lg p-4">
-                      <p className={`text-3xl font-heading font-bold ${k.color}`}>{k.value}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
-                    </div>
-                  ))}
+                {/* Crescimento de anúncios */}
+                <div className="bg-card border border-border rounded-lg p-5">
+                  <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
+                    <LayoutList className="h-4 w-4 text-primary" /> Anuncios Publicados (30 dias)
+                  </h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={growthData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={4} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="total_listings" name="Total" stroke="#d97706" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="new_listings" name="Novos/dia" stroke="#fbbf24" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
 
+                {/* Mensagens e conversas */}
+                <div className="bg-card border border-border rounded-lg p-5">
+                  <h3 className="font-heading font-semibold mb-4 flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-primary" /> Engajamento Diario (30 dias)
+                  </h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={growthData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={4} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="new_messages" name="Mensagens" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="new_conversations" name="Conversas" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+              </div>
             </div>
           ) : (
             <p className="text-muted-foreground">Nao foi possivel carregar os indicadores.</p>
@@ -360,7 +417,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ABA ANÚNCIOS */}
+            {/* ABA ANÚNCIOS */}
       {activeTab === "listings" && (
         <div>
           {/* Filtros */}
