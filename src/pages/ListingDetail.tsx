@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, MessageCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StarRating from "@/components/StarRating";
 import ChatButton from "@/components/ChatButton";
+import ReviewSection from "@/components/ReviewSection";
 import UserAvatar from "@/components/UserAvatar";
 import { useState } from "react";
 
@@ -13,7 +14,6 @@ export default function ListingDetail() {
   const { listings, reviews, revealedContacts, revealContact, user } = useApp();
   const listing = listings.find((l) => l.id === id);
   const [contactVisible, setContactVisible] = useState(false);
-  const listingReviews = reviews.filter((r) => r.listingId === id);
   const revealed = revealedContacts.includes(id || "") || contactVisible;
 
   if (!listing) return (
@@ -56,22 +56,7 @@ export default function ListingDetail() {
           </div>
 
           {/* Reviews */}
-          {listingReviews.length > 0 && (
-            <div>
-              <h3 className="font-heading font-semibold mb-3">Avaliacoes ({listingReviews.length})</h3>
-              <div className="space-y-4">
-                {listingReviews.map((r) => (
-                  <div key={r.id} className="bg-secondary p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm">{r.userName}</span>
-                      <StarRating rating={r.rating} size={14} />
-                    </div>
-                    <p className="text-sm text-muted-foreground">{r.comment}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <ReviewSection listingId={listing.id} ownerId={listing.ownerId} revealed={revealed} />
         </div>
 
         {/* Sidebar */}
