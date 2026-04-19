@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
@@ -8,6 +8,8 @@ import UserAvatar from "@/components/UserAvatar";
 
 export default function Navbar() {
   const { user, logout } = useApp();
+  const location = useLocation();
+  const showAnuncieBtn = location.pathname !== "/criar-anuncio";
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -45,6 +47,13 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          {showAnuncieBtn && (
+            <Link to={user ? "/criar-anuncio" : "/cadastro"}>
+              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold gap-2 shadow-sm">
+                + Anuncie agora
+              </Button>
+            </Link>
+          )}
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -113,6 +122,13 @@ export default function Navbar() {
           <Link to="/como-funciona" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Como Funciona</Link>
           <Link to="/busca" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Equipamentos</Link>
           <Link to="/beneficios" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Beneficios</Link>
+          {showAnuncieBtn && (
+            <Link to={user ? "/criar-anuncio" : "/cadastro"}
+              className="block py-2 text-accent font-semibold hover:text-accent/80"
+              onClick={() => setOpen(false)}>
+              + Anuncie agora
+            </Link>
+          )}
           {user ? (
             <>
               <div className="flex items-center gap-2 py-2 border-t border-primary-medium">
