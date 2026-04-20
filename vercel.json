@@ -1,12 +1,5 @@
 {
   "rewrites": [
-    {
-      "source": "/redefinir-senha",
-      "destination": "/index.html"
-    },
-    {
-      "source": "^/(?!assets/).*",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
