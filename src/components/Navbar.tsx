@@ -21,7 +21,6 @@ export default function Navbar() {
       .then(({ data }) => setIsAdmin(data?.is_admin || false));
   }, [user]);
 
-  // Fechar dropdown ao clicar fora
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -139,38 +138,7 @@ export default function Navbar() {
               <Link to="/dashboard" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Dashboard</Link>
               <Link to="/mensagens" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Mensagens</Link>
               {isAdmin && (
-                <Linpython3 << 'PYEOF'
-with open('src/pages/RedefinirSenhaPage.tsx', 'r') as f:
-    content = f.read()
-
-old = '''        <h2 className="text-xl font-heading font-bold mb-2">Link invalido ou expirado</h2>
-        <p className="text-muted-foreground mb-6">
-          Solicite um novo link de redefinicao de senha.
-        </p>
-        <Button className="bg-primary text-primary-foreground w-full" onClick={() => navigate("/login")}>
-          Solicitar novo link
-        </Button>'''
-
-new = '''        <h2 className="text-xl font-heading font-bold mb-2">Problema ao redefinir senha</h2>
-        <p className="text-muted-foreground mb-4">
-          Houve um problema ao processar seu link. Por favor entre em contato com o suporte:
-        </p>
-        <a href="mailto:agroaluga@outlook.com" className="text-primary font-medium hover:underline block mb-6">
-          agroaluga@outlook.com
-        </a>
-        <Button className="bg-primary text-primary-foreground w-full" onClick={() => navigate("/login")}>
-          Voltar ao login
-        </Button>'''
-content = content.replace(old, new)
-
-with open('src/pages/RedefinirSenhaPage.tsx', 'w') as f:
-    f.write(content)
-print("Done")
-PYEOF
-
-git add .
-git commit -m "fix: mensagem amigavel no link expirado de redefinicao"
-git pushk to="/admin" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Admin</Link>
+                <Link to="/admin" className="block py-2 hover:text-accent" onClick={() => setOpen(false)}>Admin</Link>
               )}
               <button className="block py-2 hover:text-accent text-left w-full" onClick={() => { logout(); setOpen(false); }}>Sair</button>
             </>
