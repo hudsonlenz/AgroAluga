@@ -106,7 +106,7 @@ export default function SearchPage() {
         {[
           { value: "all", label: "Todos", icon: null },
           { value: "equipamento", label: "Equipamentos", icon: Tractor },
-          { value: "servico", label: "Servicos", icon: Wrench },
+          { value: "servico", label: "Serviços", icon: Wrench },
         ].map((t) => (
           <button
             key={t.value}
@@ -180,7 +180,7 @@ export default function SearchPage() {
 
           {/* Preço */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Faixa de preco</label>
+            <label className="text-sm font-medium mb-1 block">Faixa de preço</label>
             <Select value={priceRange} onValueChange={(v) => { setPriceRange(v); setPage(1); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -199,7 +199,7 @@ export default function SearchPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="distance">Mais próximo</SelectItem>
-                <SelectItem value="price">Menor preco</SelectItem>
+                <SelectItem value="price">Menor preço</SelectItem>
                 <SelectItem value="rating">Melhor avaliação</SelectItem>
               </SelectContent>
             </Select>
