@@ -103,12 +103,15 @@ export default function RedefinirSenhaPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8 text-center">
         <Tractor className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-xl font-heading font-bold mb-2">Link invalido ou expirado</h2>
-        <p className="text-muted-foreground mb-6">
-          Solicite um novo link de redefinicao de senha.
+        <h2 className="text-xl font-heading font-bold mb-2">Problema ao redefinir senha</h2>
+        <p className="text-muted-foreground mb-4">
+          Houve um problema ao processar seu link. Por favor entre em contato com o suporte:
         </p>
+        <a href="mailto:agroaluga@outlook.com" className="text-primary font-medium hover:underline block mb-6">
+          agroaluga@outlook.com
+        </a>
         <Button className="bg-primary text-primary-foreground w-full" onClick={() => navigate("/login")}>
-          Solicitar novo link
+          Voltar ao login
         </Button>
       </div>
     </div>
