@@ -18,10 +18,10 @@ export default function Footer() {
           <h4 className="font-heading font-semibold mb-3 text-accent">Plataforma</h4>
           <ul className="space-y-2 text-sm opacity-80">
             <li><Link to="/busca" className="hover:text-accent transition-colors">Buscar Equipamentos</Link></li>
-            <li><Link to="/busca?type=servico" className="hover:text-accent transition-colors">Buscar Servicos</Link></li>
+            <li><Link to="/busca?type=servico" className="hover:text-accent transition-colors">Buscar Serviços</Link></li>
             <li><Link to="/criar-anuncio" className="hover:text-accent transition-colors">Anunciar Gratuitamente</Link></li>
             <li><Link to="/como-funciona" className="hover:text-accent transition-colors">Como Funciona</Link></li>
-            <li><Link to="/beneficios" className="hover:text-accent transition-colors">Beneficios</Link></li>
+            <li><Link to="/beneficios" className="hover:text-accent transition-colors">Benefícios</Link></li>
           </ul>
         </div>
         <div>

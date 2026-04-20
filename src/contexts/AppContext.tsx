@@ -102,11 +102,11 @@ export const SERVICE_CATEGORIES = [
   "Analise e Consultoria Agricola",
   "Aplicação de Defensivos",
   "Instalação de Irrigação",
-  "Servicos Veterinarios",
+  "Serviços Veterinários",
   "Transporte de Animais",
   "Cercamento e Terraplanagem",
   "Armazenagem de Graos",
-  "Outros Servicos",
+  "Outros Serviços",
 ];
 
 export const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];

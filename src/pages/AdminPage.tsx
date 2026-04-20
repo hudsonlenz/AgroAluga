@@ -528,7 +528,7 @@ export default function AdminPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="equipamento">Equipamentos</SelectItem>
-                  <SelectItem value="servico">Servicos</SelectItem>
+                  <SelectItem value="servico">Serviços</SelectItem>
                 </SelectContent>
               </Select>
               <div className="relative">
