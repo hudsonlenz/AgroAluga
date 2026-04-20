@@ -99,7 +99,7 @@ export default function SearchPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-heading font-bold mb-4">Buscar Equipamentos e Servicos</h1>
+      <h1 className="text-2xl font-heading font-bold mb-4">Buscar Equipamentos e Serviços</h1>
 
       {/* Filtro de tipo — abas principais */}
       <div className="flex gap-3 mb-6">
