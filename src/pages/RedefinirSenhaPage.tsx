@@ -72,8 +72,8 @@ export default function RedefinirSenhaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || !confirmPassword) { setError("Preencha todos os campos."); return; }
-    if (password.length < 6) { setError("A senha deve ter no minimo 6 caracteres."); return; }
-    if (password !== confirmPassword) { setError("As senhas nao coincidem."); return; }
+    if (password.length < 6) { setError("A senha deve ter no mínimo 6 caracteres."); return; }
+    if (password !== confirmPassword) { setError("As senhas não coincidem."); return; }
 
     setLoading(true);
     setError("");

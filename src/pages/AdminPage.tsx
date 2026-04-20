@@ -234,7 +234,7 @@ export default function AdminPage() {
         recipient_email: userEmail,
         recipient_name: userName,
         sender_name: "Equipe AgroAluga",
-        listing_title: "Mensagem da Administracao",
+        listing_title: "Mensagem da Administração",
         message_preview: message,
       },
     });
@@ -308,7 +308,7 @@ export default function AdminPage() {
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
   if (isAdmin === false) return <Navigate to="/" />;
-  if (isAdmin === null) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Verificando permissoes...</div>;
+  if (isAdmin === null) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Verificando permissões...</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -409,7 +409,7 @@ export default function AdminPage() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-1"><Star className="h-3.5 w-3.5" /> Qualidade</p>
                   <div className="space-y-2">
                     {[
-                      { label: "Avaliacoes", value: kpis.total_reviews, color: "text-primary" },
+                      { label: "Avaliações", value: kpis.total_reviews, color: "text-primary" },
                       { label: "Nota media", value: Number(kpis.avg_rating).toFixed(1) + " ★", color: "text-accent" },
                       { label: "Reportadas", value: kpis.reported_reviews, color: kpis.reported_reviews > 0 ? "text-destructive" : "text-green-600" },
                     ].map((k) => (
@@ -607,11 +607,11 @@ export default function AdminPage() {
                     <p><span className="font-medium">E-mail:</span> {selected.owner_email}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-sm mb-1">Descricao:</p>
+                    <p className="font-medium text-sm mb-1">Descrição:</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">{selected.description}</p>
                   </div>
                   <div className="space-y-2 pt-2 border-t border-border">
-                    <p className="text-xs font-medium text-muted-foreground uppercase">Acoes do Admin</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase">Ações do Admin</p>
                     <div className="flex gap-2 flex-wrap">
                       {statusFilter === "pending" && (
                         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1"
@@ -659,7 +659,7 @@ export default function AdminPage() {
               ) : (
                 <div className="bg-card border border-border rounded-lg p-12 text-center text-muted-foreground">
                   <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Selecione um anuncio para ver os detalhes
+                  Selecione um anúncio para ver os detalhes
                 </div>
               )}
             </div>
@@ -674,32 +674,32 @@ export default function AdminPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, codigo ou cidade..."
+                placeholder="Buscar por nome, código ou cidade..."
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 className="pl-9"
               />
             </div>
-            <p className="text-sm text-muted-foreground self-center">{filteredUsers.length} usuario(s)</p>
+            <p className="text-sm text-muted-foreground self-center">{filteredUsers.length} usuário(s)</p>
           </div>
 
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-secondary">
                 <tr>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Usuario</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Codigo</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Usuário</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Código</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">E-mail</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Localizacao</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Localização</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">Cadastro</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Acoes</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {usersLoading ? (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
                 ) : filteredUsers.length === 0 ? (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum usuario encontrado.</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>
                 ) : filteredUsers.map((u, i) => (
                   <tr key={u.id} className={`border-t border-border hover:bg-secondary/50 transition-colors ${(u as any).blocked ? "bg-destructive/5" : i % 2 === 0 ? "" : "bg-secondary/20"}`}>
                     <td className="p-3">

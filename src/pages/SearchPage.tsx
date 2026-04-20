@@ -49,10 +49,10 @@ export default function SearchPage() {
         setCityInput(place.city);
         setLocationLabel(`${place.city}, ${place.state}`);
       } else {
-        setLocationLabel("Sua localizacao atual");
+        setLocationLabel("Sua localização atual");
       }
     } else {
-      alert("Nao foi possivel obter sua localizacao.");
+      alert("Não foi possível obter sua localização.");
     }
     setLocating(false);
     setPage(1);
@@ -131,7 +131,7 @@ export default function SearchPage() {
 
           {/* Localização */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Localizacao</label>
+            <label className="text-sm font-medium mb-1 block">Localização</label>
             <div className="flex gap-2 mb-2">
               <Input placeholder="Digite sua cidade" value={cityInput}
                 onChange={(e) => setCityInput(e.target.value)}
@@ -143,7 +143,7 @@ export default function SearchPage() {
             </div>
             <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={handleGPS} disabled={locating}>
               {locating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />}
-              {locating ? "Localizando..." : "Usar minha localizacao"}
+              {locating ? "Localizando..." : "Usar minha localização"}
             </Button>
             {locationLabel && (
               <p className="text-xs text-primary mt-1 flex items-center gap-1">
@@ -198,9 +198,9 @@ export default function SearchPage() {
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="distance">Mais proximo</SelectItem>
+                <SelectItem value="distance">Mais próximo</SelectItem>
                 <SelectItem value="price">Menor preco</SelectItem>
-                <SelectItem value="rating">Melhor avaliacao</SelectItem>
+                <SelectItem value="rating">Melhor avaliação</SelectItem>
               </SelectContent>
             </Select>
           </div>

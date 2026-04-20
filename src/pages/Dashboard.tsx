@@ -18,7 +18,7 @@ export default function Dashboard() {
   const totalContacts = myListings.reduce((s, l) => s + l.contactsRevealed, 0);
 
   const stats = [
-    { icon: Eye, label: "Visualizacoes", value: totalViews },
+    { icon: Eye, label: "Visualizações", value: totalViews },
     { icon: Users, label: "Contatos Revelados", value: totalContacts },
   ];
 

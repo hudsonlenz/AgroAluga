@@ -137,7 +137,7 @@ export default function MessagesPage() {
   async function sendMessage() {
     if (!input.trim()) return;
     if (user?.blocked) {
-      alert("Sua conta esta bloqueada e nao pode enviar mensagens.");
+      alert("Sua conta está bloqueada e não pode enviar mensagens.");
       return;
     }
     const content = input.trim();
@@ -193,7 +193,7 @@ export default function MessagesPage() {
   };
 
   const activeHeader = pendingNew
-    ? { name: "", title: pendingListing?.title || "Novo anuncio", image: pendingListing?.images?.[0] }
+    ? { name: "", title: pendingListing?.title || "Novo anúncio", image: pendingListing?.images?.[0] }
     : selected
     ? { name: selected.other_user?.name || "", title: selected.listing?.title || "", image: selected.listing?.images?.[0] }
     : null;
@@ -209,7 +209,7 @@ export default function MessagesPage() {
   if (!hasContent) return (
     <div className="container mx-auto px-4 py-20 text-center">
       <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <p className="text-muted-foreground mb-4">Voce ainda nao tem conversas.</p>
+      <p className="text-muted-foreground mb-4">Você ainda não tem conversas.</p>
       <Link to="/busca">
         <Button className="bg-primary text-primary-foreground">Buscar servicos</Button>
       </Link>

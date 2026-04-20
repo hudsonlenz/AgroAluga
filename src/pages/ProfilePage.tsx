@@ -149,7 +149,7 @@ export default function ProfilePage() {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? "Salvando..." : "Salvar alteracoes"}
+          {saving ? "Salvando..." : "Salvar alterações"}
         </Button>
       </div>
     </div>

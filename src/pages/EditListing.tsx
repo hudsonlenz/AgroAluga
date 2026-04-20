@@ -138,7 +138,7 @@ export default function EditListing() {
           </Select>
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">Descricao *</label>
+          <label className="text-sm font-medium mb-1 block">Descrição *</label>
           <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4} />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -160,7 +160,7 @@ export default function EditListing() {
         {/* Localização */}
         <div>
           <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> Localizacao do servico *
+            <MapPin className="h-3 w-3" /> Localização do serviço *
           </label>
           <div className="grid grid-cols-3 gap-3">
             <Input
@@ -223,7 +223,7 @@ export default function EditListing() {
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={() => navigate("/dashboard")}>Cancelar</Button>
           <Button className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" onClick={handleSave} disabled={loading}>
-            {loading ? "Salvando..." : "Salvar alteracoes"}
+            {loading ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
       </div>

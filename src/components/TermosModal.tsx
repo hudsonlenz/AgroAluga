@@ -39,37 +39,37 @@ export default function TermosModal({ open, onAccept, onClose }: TermosModalProp
         >
           <section>
             <h3 className="font-semibold text-foreground mb-2">1. Sobre a Plataforma</h3>
-            <p>O AgroAluga e uma plataforma de conexao entre produtores rurais que oferecem equipamentos e servicos agricolas e produtores que buscam essas solucoes na sua regiao. A plataforma e operada por pessoa fisica, com sede em Santa Catarina, Brasil.</p>
+            <p>O AgroAluga e uma plataforma de conexao entre produtores rurais que oferecem equipamentos e serviços agrícolas e produtores que buscam essas soluções na sua região. A plataforma é operada por pessoa física, com sede em Santa Catarina, Brasil.</p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">2. Aceitacao dos Termos</h3>
-            <p>Ao se cadastrar ou utilizar o AgroAluga, voce declara ter lido, compreendido e concordado com estes Termos de Uso. Caso nao concorde com qualquer disposicao, nao utilize a plataforma.</p>
+            <h3 className="font-semibold text-foreground mb-2">2. Aceitação dos Termos</h3>
+            <p>Ao se cadastrar ou utilizar o AgroAluga, você declara ter lido, compreendido e concordado com estes Termos de Uso. Caso nao concorde com qualquer disposição, não utilize a plataforma.</p>
           </section>
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">3. Cadastro e Conta</h3>
-            <p>Para utilizar os recursos completos da plataforma, e necessario criar uma conta com informacoes verdadeiras e atualizadas. Voce e responsavel pela confidencialidade da sua senha e por todas as atividades realizadas com sua conta. O AgroAluga reserva-se o direito de encerrar contas que violem estes termos.</p>
+            <p>Para utilizar os recursos completos da plataforma, é necessário criar uma conta com informações verdadeiras e atualizadas. Você é responsável pela confidencialidade da sua senha e por todas as atividades realizadas com sua conta. O AgroAluga reserva-se o direito de encerrar contas que violem estes termos.</p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">4. Publicacao de Anuncios</h3>
-            <p>Ao publicar um anuncio, o usuario declara que e proprietario ou tem autorizacao para anunciar o equipamento ou servico, que as informacoes, fotos e precos sao verdadeiros e atualizados, e que o conteudo nao viola direitos de terceiros nem a legislacao brasileira. Nao serao publicados conteudos ofensivos, enganosos, ilegais ou inadequados. Todos os anuncios passam por moderacao antes de serem publicados.</p>
+            <h3 className="font-semibold text-foreground mb-2">4. Publicação de Anúncios</h3>
+            <p>Ao publicar um anuncio, o usuario declara que e proprietario ou tem autorização para anunciar o equipamento ou serviço, que as informações, fotos e preços são verdadeiros e atualizados, e que o conteúdo não viola direitos de terceiros nem a legislação brasileira. Nao serao publicados conteudos ofensivos, enganosos, ilegais ou inadequados. Todos os anúncios passam por moderação antes de serem publicados.</p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">5. Responsabilidade pelas Negociacoes</h3>
-            <p>O AgroAluga e uma plataforma de conexao e nao participa das negociacoes, contratos ou transacoes realizadas entre usuarios. A plataforma nao se responsabiliza por qualidade, estado ou disponibilidade dos equipamentos e servicos anunciados, descumprimento de acordos entre as partes, danos causados durante a prestacao de servicos ou uso de equipamentos, ou veracidade das informacoes fornecidas pelos usuarios. Recomendamos que todos os acordos sejam formalizados por escrito entre as partes.</p>
+            <h3 className="font-semibold text-foreground mb-2">5. Responsabilidade pelas Negociações</h3>
+            <p>O AgroAluga e uma plataforma de conexão e não participa das negociações, contratos ou transações realizadas entre usuários. A plataforma nao se responsabiliza por qualidade, estado ou disponibilidade dos equipamentos e serviços anunciados, descumprimento de acordos entre as partes, danos causados durante a prestação de serviços ou uso de equipamentos, ou veracidade das informações fornecidas pelos usuários. Recomendamos que todos os acordos sejam formalizados por escrito entre as partes.</p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">6. Avaliacoes</h3>
-            <p>Os usuarios que revelarem o contato de um anunciante podem deixar avaliacoes sobre sua experiencia. As avaliacoes devem ser honestas e baseadas em experiencias reais. E proibido publicar avaliacoes falsas, difamatorias ou com o objetivo de prejudicar concorrentes.</p>
+            <h3 className="font-semibold text-foreground mb-2">6. Avaliações</h3>
+            <p>Os usuários que revelarem o contato de um anunciante podem deixar avaliações sobre sua experiência. As avaliações devem ser honestas e baseadas em experiências reais. É proibido publicar avaliações falsas, difamatórias ou com o objetivo de prejudicar concorrentes.</p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">7. Gratuidade e Alteracoes no Modelo</h3>
-            <p>O cadastro e a publicacao de anuncios sao atualmente gratuitos. O AgroAluga reserva-se o direito de alterar o modelo de negocios e introduzir planos pagos no futuro, mediante comunicacao previa aos usuarios com antecedencia minima de 30 dias.</p>
+            <h3 className="font-semibold text-foreground mb-2">7. Gratuidade e Alterações no Modelo</h3>
+            <p>O cadastro e a publicação de anúncios são atualmente gratuitos. O AgroAluga reserva-se o direito de alterar o modelo de negócios e introduzir planos pagos no futuro, mediante comunicação prévia aos usuários com antecedência mínima de 30 dias.</p>
           </section>
 
           <section>
@@ -79,16 +79,16 @@ export default function TermosModal({ open, onAccept, onClose }: TermosModalProp
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">9. Privacidade e Dados (LGPD)</h3>
-            <p>O tratamento de dados pessoais e regido pela nossa Politica de Privacidade, em conformidade com a Lei Geral de Protecao de Dados (LGPD — Lei 13.709/2018). Os dados coletados sao utilizados exclusivamente para operacao da plataforma e nao sao vendidos a terceiros.</p>
+            <p>O tratamento de dados pessoais e regido pela nossa Política de Privacidade, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018). Os dados coletados sao utilizados exclusivamente para operação da plataforma e não são vendidos a terceiros.</p>
           </section>
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">10. Contato</h3>
-            <p>Para duvidas, sugestoes ou reclamacoes relacionadas a estes termos, entre em contato pelo e-mail: agroaluga@outlook.com</p>
+            <p>Para dúvidas, sugestões ou reclamações relacionadas a estes termos, entre em contato pelo e-mail: agroaluga@outlook.com</p>
           </section>
 
           <div className="pt-4 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground">Ultima atualizacao: abril de 2026</p>
+            <p className="text-xs text-muted-foreground">Última atualização: abril de 2026</p>
           </div>
         </div>
 

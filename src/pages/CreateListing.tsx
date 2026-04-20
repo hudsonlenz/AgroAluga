@@ -117,7 +117,7 @@ export default function CreateListing() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <h1 className="text-2xl font-heading font-bold mb-2">Criar Anuncio</h1>
-      <p className="text-sm text-muted-foreground mb-6">Publicacao gratuita — sem custo para anunciar.</p>
+      <p className="text-sm text-muted-foreground mb-6">Publicação gratuita — sem custo para anunciar.</p>
 
       <div className="bg-card border border-border rounded-lg p-6 space-y-5">
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -168,9 +168,9 @@ export default function CreateListing() {
         </div>
 
         <div>
-          <label className="text-sm font-medium mb-1 block">Descricao *</label>
+          <label className="text-sm font-medium mb-1 block">Descrição *</label>
           <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={4}
-            placeholder={listingType === "equipamento" ? "Descreva o equipamento, estado de conservacao, marca, modelo..." : "Descreva o servico, sua experiencia, area de atuacao..."} />
+            placeholder={listingType === "equipamento" ? "Descreva o equipamento, estado de conservação, marca, modelo..." : "Descreva o servico, sua experiencia, área de atuação..."} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -193,7 +193,7 @@ export default function CreateListing() {
 
         <div>
           <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> Localizacao *
+            <MapPin className="h-3 w-3" /> Localização *
           </label>
           <div className="grid grid-cols-3 gap-3">
             <Input placeholder="Cidade *" value={form.city} onChange={(e) => set("city", e.target.value)} className="col-span-2" />

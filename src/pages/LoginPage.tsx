@@ -91,7 +91,7 @@ export default function LoginPage() {
                   type="submit"
                   disabled={resetLoading}
                 >
-                  {resetLoading ? "Enviando..." : "Enviar link de redefinicao"}
+                  {resetLoading ? "Enviando..." : "Enviar link de redefinição"}
                 </Button>
                 <button
                   type="button"
@@ -140,7 +140,7 @@ export default function LoginPage() {
                 {loading ? "Entrando..." : "Entrar"}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
-                Nao tem conta?{" "}
+                Não tem conta?{" "}
                 <Link to="/cadastro" className="text-primary font-medium hover:underline">
                   Cadastre-se gratuitamente
                 </Link>

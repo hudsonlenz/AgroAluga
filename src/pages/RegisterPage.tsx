@@ -27,8 +27,8 @@ export default function RegisterPage() {
     if (!form.name || !form.email || !form.password || !form.phone || !form.state || !form.city) {
       setError("Preencha todos os campos obrigatorios."); return;
     }
-    if (form.password.length < 6) { setError("A senha deve ter no minimo 6 caracteres."); return; }
-    if (form.password !== form.confirmPassword) { setError("As senhas nao coincidem."); return; }
+    if (form.password.length < 6) { setError("A senha deve ter no mínimo 6 caracteres."); return; }
+    if (form.password !== form.confirmPassword) { setError("As senhas não coincidem."); return; }
     if (!form.terms) { setError("Voce precisa aceitar os termos de uso para continuar."); return; }
 
     setLoading(true);

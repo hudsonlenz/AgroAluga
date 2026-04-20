@@ -83,9 +83,9 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
       comment: comment.trim(),
     });
     if (error) {
-      setError("Erro ao enviar avaliacao.");
+      setError("Erro ao enviar avaliação.");
     } else {
-      setSuccess("Avaliacao enviada com sucesso!");
+      setSuccess("Avaliação enviada com sucesso!");
       setRating(0);
       setComment("");
       fetchReviews();
@@ -113,7 +113,7 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-lg">
-          Avaliacoes {reviews.length > 0 && `(${reviews.length})`}
+          Avaliações {reviews.length > 0 && `(${reviews.length})`}
         </h3>
         {avgRating && (
           <div className="flex items-center gap-1">
@@ -126,7 +126,7 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
       {/* Formulário de avaliação */}
       {canReview && (
         <div className="bg-secondary p-4 rounded-lg space-y-3 border border-border">
-          <p className="font-medium text-sm">Deixe sua avaliacao</p>
+          <p className="font-medium text-sm">Deixe sua avaliação</p>
           {error && <p className="text-xs text-destructive">{error}</p>}
           {success && <p className="text-xs text-green-600">{success}</p>}
           <StarPicker value={rating} onChange={setRating} />
@@ -141,7 +141,7 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
             disabled={submitting}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
           >
-            {submitting ? "Enviando..." : "Enviar avaliacao"}
+            {submitting ? "Enviando..." : "Enviar avaliação"}
           </Button>
         </div>
       )}

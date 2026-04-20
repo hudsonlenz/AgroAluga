@@ -83,8 +83,8 @@ export const EQUIPMENT_CATEGORIES = [
   "Colheitadeiras",
   "Plantadeiras e Semeadoras",
   "Pulverizadores",
-  "Caminhoes e Transporte",
-  "Irrigacao e Bombeamento",
+  "Caminhões e Transporte",
+  "Irrigação e Bombeamento",
   "Drones Agricolas",
   "Ferramentas Eletricas",
   "Motosserras e Roçadeiras",
@@ -100,8 +100,8 @@ export const SERVICE_CATEGORIES = [
   "Fotografia e Mapeamento Aereo",
   "Coleta de Amostras de Solo",
   "Analise e Consultoria Agricola",
-  "Aplicacao de Defensivos",
-  "Instalacao de Irrigacao",
+  "Aplicação de Defensivos",
+  "Instalação de Irrigação",
   "Servicos Veterinarios",
   "Transporte de Animais",
   "Cercamento e Terraplanagem",
@@ -214,8 +214,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   function traduzirErro(msg: string): string {
     if (msg.includes("Invalid login credentials")) return "E-mail ou senha incorretos.";
     if (msg.includes("Email not confirmed")) return "Confirme seu e-mail antes de entrar.";
-    if (msg.includes("User already registered")) return "Este e-mail ja esta cadastrado.";
-    if (msg.includes("Password should be at least")) return "A senha deve ter no minimo 6 caracteres.";
+    if (msg.includes("User already registered")) return "Este e-mail já está cadastrado.";
+    if (msg.includes("Password should be at least")) return "A senha deve ter no mínimo 6 caracteres.";
     return "Ocorreu um erro. Tente novamente.";
   }
 
