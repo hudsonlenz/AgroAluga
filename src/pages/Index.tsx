@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Tractor, Wheat, Droplets, Truck, Wrench, Sprout, Users, BarChart3, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,21 @@ const CATEGORY_ICONS: any[] = [
 export default function Index() {
   const { listings } = useApp();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Capturar token de recovery do Supabase
+    const hash = window.location.hash;
+    console.log("Index hash:", hash);
+    if (hash.includes("type=recovery") || hash.includes("type=signup")) {
+      // Processar a sessao do Supabase
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log("Session apos recovery:", session);
+        if (session) {
+          navigate("/redefinir-senha");
+        }
+      });
+    }
+  }, []);
   const [searchService, setSearchService] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const featured = listings.filter((l) => l.featured).slice(0, 9);
