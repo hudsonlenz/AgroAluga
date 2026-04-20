@@ -38,7 +38,7 @@ serve(async (req) => {
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: "AgroAluga <onboarding@resend.dev>",
+      from: "AgroAluga <noreply@agroaluga.com.br>",
       to: [owner_email],
       subject,
       html,
