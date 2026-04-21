@@ -52,7 +52,7 @@ export default function Index() {
     if (value.length < 2) { setCitySuggestions([]); return; }
     autocompleteTimer.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=6&addressdetails=1&countrycodes=br`;
+        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(value)}&country=Brazil&format=json&limit=6&addressdetails=1`;
         const res = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
         const data = await res.json();
         const seen = new Set<string>();
