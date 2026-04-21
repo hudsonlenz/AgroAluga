@@ -52,9 +52,9 @@ export default function Index() {
       setUserCoords(pos);
       const place = await reverseGeocode(pos.lat, pos.lng);
       if (place) { setCityInput(place.city); setLocationLabel(`${place.city}, ${place.state}`); }
-      else setLocationLabel("Sua localizacao atual");
+      else setLocationLabel("Sua localização atual");
     } else {
-      alert("Nao foi possivel obter sua localizacao.");
+      alert("Não foi possível obter sua localização.");
     }
     setLocating(false);
     setPage(1);
@@ -120,13 +120,13 @@ export default function Index() {
       <section className="bg-primary py-8 px-4">
         <div className="container mx-auto max-w-3xl text-center">
           <h1 className="text-xl md:text-2xl font-heading font-bold text-primary-foreground mb-5">
-            Equipamentos e servicos agricolas perto de voce
+            Equipamentos e servicos agrícolas perto de você
           </h1>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-2xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="O que voce precisa?"
+                placeholder="O que você precisa?"
                 className="bg-card text-card-foreground border-0 h-11 pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -184,7 +184,7 @@ export default function Index() {
 
             {/* Preco min/max */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Preco (R$)</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Preço (R$)</label>
               <div className="flex gap-1 items-center">
                 <Input
                   placeholder="Min"
@@ -206,9 +206,9 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Localizacao */}
+            {/* Localização */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Localizacao</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Localização</label>
               <div className="flex gap-1">
                 <Input
                   placeholder="Sua cidade..."
@@ -265,10 +265,10 @@ export default function Index() {
             <SelectTrigger className="h-8 text-xs w-44 shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="recent">Mais recentes</SelectItem>
-              <SelectItem value="distance">Mais proximo</SelectItem>
-              <SelectItem value="price_asc">Menor preco</SelectItem>
-              <SelectItem value="price_desc">Maior preco</SelectItem>
-              <SelectItem value="rating">Melhor avaliacao</SelectItem>
+              <SelectItem value="distance">Mais próximo</SelectItem>
+              <SelectItem value="price_asc">Menor preço</SelectItem>
+              <SelectItem value="price_desc">Maior preço</SelectItem>
+              <SelectItem value="rating">Melhor avaliação</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -280,7 +280,7 @@ export default function Index() {
           {paginated.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Tractor className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-medium mb-2">Nenhum anuncio encontrado</p>
+              <p className="font-medium mb-2">Nenhum anúncio encontrado</p>
               <p className="text-sm mb-4">Tente ajustar os filtros ou buscar em outra regiao.</p>
               {hasActiveFilters && (
                 <Button variant="outline" onClick={clearFilters} className="gap-2">
@@ -312,8 +312,8 @@ export default function Index() {
       {/* CTA anunciantes */}
       <section className="py-10 bg-primary/5 border-t border-border">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-xl font-heading font-bold mb-2">Tem equipamentos ou presta servicos agricolas?</h2>
-          <p className="text-muted-foreground text-sm mb-5">Anuncie gratuitamente e alcance produtores da sua regiao.</p>
+          <h2 className="text-xl font-heading font-bold mb-2">Tem equipamentos ou presta serviços agrícolas?</h2>
+          <p className="text-muted-foreground text-sm mb-5">Anuncie gratuitamente e alcance produtores da sua região.</p>
           <Button onClick={() => navigate("/criar-anuncio")} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8">
             + Anunciar gratuitamente
           </Button>
