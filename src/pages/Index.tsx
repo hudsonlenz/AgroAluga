@@ -53,13 +53,13 @@ export default function Index() {
     autocompleteTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`format=json`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`limit=8`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`addressdetails=1`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`countrycodes=br`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value + ", Brazil")}&format=json&limit=5&addressdetails=1`featuretype=city`,
           { headers: { "Accept-Language": "pt-BR" } }
         );
         const data = await res.json();
         const suggestions = data
           .filter((d: any) => d.address?.city || d.address?.town || d.address?.village)
-          .map((d: any) => ({
+          .filter((d: any, i: number, arr: any[]) => arr.findIndex((x: any) => (x.address?.city || x.address?.town || x.address?.village) === (d.address?.city || d.address?.town || d.address?.village)).map((d: any) => ({
             label: [d.address?.city || d.address?.town || d.address?.village, d.address?.state].filter(Boolean).join(", "),
             lat: parseFloat(d.lat),
             lng: parseFloat(d.lon),
