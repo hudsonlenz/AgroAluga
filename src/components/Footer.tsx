@@ -37,7 +37,16 @@ export default function Footer() {
       </div>
       <div className="container mx-auto px-4 mt-8 pt-6 border-t border-primary-medium flex flex-col md:flex-row items-center justify-between gap-2 text-sm opacity-60">
         <span>© 2026 AgroAluga. Todos os direitos reservados.</span>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
+          
+            href="https://nubank.com.br/cobrar/pix?valor=0&chave=6888411d-85de-4cca-81a5-40a2f8e81695"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-accent hover:text-accent/80 transition-colors font-medium"
+          >
+            ❤ Apoie o AgroAluga
+          </a>
+          <span className="opacity-30">|</span>
           <Link to="/termos" className="hover:text-accent transition-colors">Termos de Uso</Link>
           <Link to="/privacidade" className="hover:text-accent transition-colors">Política de Privacidade</Link>
         </div>
