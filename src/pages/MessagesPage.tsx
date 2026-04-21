@@ -4,7 +4,7 @@ import { useApp } from "@/contexts/AppContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, ExternalLink } from "lucide-react";
 
 interface Message {
   id: string;
@@ -39,6 +39,7 @@ export default function MessagesPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -68,10 +69,6 @@ export default function MessagesPage() {
     return () => { supabase.removeChannel(channel); };
   }, [selected]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   async function fetchConversations() {
     setLoading(true);
     const { data } = await supabase
@@ -93,14 +90,12 @@ export default function MessagesPage() {
       }));
       setConversations(convs);
 
-      // Se veio da página do anúncio
       if (newListingId && newSellerId) {
         const existing = convs.find((c) => c.listing_id === newListingId && c.buyer_id === user.id);
         if (existing) {
           setSelected(existing);
           setPendingNew(null);
         } else {
-          // Buscar dados do anúncio para mostrar no header
           const { data: listingData } = await supabase
             .from("listings")
             .select("title, images")
@@ -123,7 +118,15 @@ export default function MessagesPage() {
       .select("*")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
-    if (data) setMessages(data);
+    if (data) {
+      setMessages(data);
+      // Scroll para o fim apenas apos carregar as mensagens
+      setTimeout(() => {
+        if (messagesRef.current) {
+          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+        }
+      }, 50);
+    }
   }
 
   async function markAsRead(conversationId: string) {
@@ -137,13 +140,12 @@ export default function MessagesPage() {
   async function sendMessage() {
     if (!input.trim()) return;
     if (user?.blocked) {
-      alert("Sua conta está bloqueada e não pode enviar mensagens.");
+      alert("Sua conta esta bloqueada e nao pode enviar mensagens.");
       return;
     }
     const content = input.trim();
     setInput("");
 
-    // Se é uma nova conversa, criar primeiro
     if (pendingNew) {
       const { data: conv, error } = await supabase
         .from("conversations")
@@ -192,8 +194,9 @@ export default function MessagesPage() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  const activeListingId = pendingNew ? pendingNew.listingId : selected?.listing_id;
   const activeHeader = pendingNew
-    ? { name: "", title: pendingListing?.title || "Novo anúncio", image: pendingListing?.images?.[0] }
+    ? { name: "", title: pendingListing?.title || "Novo anuncio", image: pendingListing?.images?.[0] }
     : selected
     ? { name: selected.other_user?.name || "", title: selected.listing?.title || "", image: selected.listing?.images?.[0] }
     : null;
@@ -209,7 +212,7 @@ export default function MessagesPage() {
   if (!hasContent) return (
     <div className="container mx-auto px-4 py-20 text-center">
       <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <p className="text-muted-foreground mb-4">Você ainda não tem conversas.</p>
+      <p className="text-muted-foreground mb-4">Voce ainda nao tem conversas.</p>
       <Link to="/busca">
         <Button className="bg-primary text-primary-foreground">Buscar servicos</Button>
       </Link>
@@ -249,23 +252,35 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Área de chat */}
+        {/* Area de chat */}
         <div className="md:col-span-2 border border-border rounded-lg overflow-hidden flex flex-col">
           {activeHeader ? (
             <>
+              {/* Cabecalho com nome + link para anuncio */}
               <div className="p-3 border-b border-border bg-secondary flex items-center gap-3">
                 <img
                   src={activeHeader.image || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
                   alt=""
-                  className="h-8 w-8 rounded-md object-cover"
+                  className="h-10 w-10 rounded-md object-cover shrink-0"
                 />
-                <div>
-                  {activeHeader.name && <p className="font-medium text-sm">{activeHeader.name}</p>}
-                  <p className="text-xs text-primary">{activeHeader.title}</p>
+                <div className="flex-1 min-w-0">
+                  {activeHeader.name && (
+                    <p className="font-semibold text-sm truncate">{activeHeader.name}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground truncate">{activeHeader.title}</p>
                 </div>
+                {activeListingId && (
+                  <Link
+                    to={`/anuncio/${activeListingId}`}
+                    className="shrink-0 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium bg-primary/10 px-2.5 py-1.5 rounded-md transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Ver anuncio
+                  </Link>
+                )}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                 {pendingNew && (
                   <p className="text-center text-sm text-muted-foreground py-8">
                     Envie uma mensagem para iniciar a conversa!
