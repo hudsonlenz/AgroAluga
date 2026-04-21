@@ -99,31 +99,26 @@ export default function SearchPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-heading font-bold mb-4">Buscar Equipamentos e Servicos</h1>
+      <h1 className="text-2xl font-heading font-bold mb-4">Buscar Equipamentos e Serviços</h1>
 
-      {/* Filtro de categorias — pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-        <button
-          onClick={() => { setCategory("all"); setListingType("all"); setPage(1); }}
-          className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            category === "all" && listingType === "all"
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
-          }`}
-        >
-          Todos
-        </button>
-        {ALL_CATEGORIES.map((cat) => (
+      {/* Filtro de tipo — abas principais */}
+      <div className="flex gap-3 mb-6">
+        {[
+          { value: "all", label: "Todos", icon: null },
+          { value: "equipamento", label: "Equipamentos", icon: Tractor },
+          { value: "servico", label: "Serviços", icon: Wrench },
+        ].map((t) => (
           <button
-            key={cat}
-            onClick={() => { setCategory(cat); setListingType("all"); setPage(1); }}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              category === cat
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
+            key={t.value}
+            onClick={() => { setListingType(t.value as any); setCategory("all"); setPage(1); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+              listingType === t.value
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border hover:border-primary/50 text-muted-foreground"
             }`}
           >
-            {cat}
+            {t.icon && <t.icon className="h-4 w-4" />}
+            {t.label}
           </button>
         ))}
       </div>
@@ -185,7 +180,7 @@ export default function SearchPage() {
 
           {/* Preço */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Faixa de preco</label>
+            <label className="text-sm font-medium mb-1 block">Faixa de preço</label>
             <Select value={priceRange} onValueChange={(v) => { setPriceRange(v); setPage(1); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -204,7 +199,7 @@ export default function SearchPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="distance">Mais próximo</SelectItem>
-                <SelectItem value="price">Menor preco</SelectItem>
+                <SelectItem value="price">Menor preço</SelectItem>
                 <SelectItem value="rating">Melhor avaliação</SelectItem>
               </SelectContent>
             </Select>
