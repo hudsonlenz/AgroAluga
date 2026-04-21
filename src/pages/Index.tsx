@@ -29,7 +29,7 @@ export default function Index() {
   const [locationLabel, setLocationLabel] = useState("");
   const [locating, setLocating] = useState(false);
   const [radiusKm, setRadiusKm] = useState(100);
-  const [citySuggestions, setCitySuggestions] = useState<{ label: string; lat: number; lng: number }[]>([]);
+  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
   const autocompleteTimer = useRef<any>(null);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function Index() {
     if (value.length < 2) { setCitySuggestions([]); return; }
     autocompleteTimer.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(value)}&country=Brazil&format=json&limit=6&addressdetails=1`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=6&addressdetails=1&countrycodes=br`;
         const res = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
         const data = await res.json();
         const seen = new Set<string>();
@@ -73,11 +73,21 @@ export default function Index() {
     }, 350);
   };
 
-  const handleSelectCity = (s: { label: string; lat: number; lng: number }) => {
+  const handleSelectCity = async (s: any) => {
     setCityInput(s.label);
     setLocationLabel(s.label);
-    setUserCoords({ lat: s.lat, lng: s.lng });
     setCitySuggestions([]);
+    // Geocodificar a cidade selecionada
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(s.nome)}&state=${encodeURIComponent(s.uf)}&country=Brazil&format=json&limit=1`,
+        { headers: { "Accept-Language": "pt-BR" } }
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        setUserCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+      }
+    } catch {}
     setPage(1);
   };
 
