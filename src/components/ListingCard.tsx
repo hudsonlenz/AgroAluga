@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
 import { Listing } from "@/contexts/AppContext";
-import { Button } from "@/components/ui/button";
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   return (
-    <div className="bg-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow animate-fade-in border border-border/50">
+    <Link to={`/anuncio/${listing.id}`} className="block bg-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all animate-fade-in border border-border/50 hover:border-primary/30 cursor-pointer">
       <div className="h-48 overflow-hidden">
         <img
           src={listing.images[0]}
@@ -36,12 +35,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             </div>
           )}
         </div>
-        <Link to={`/anuncio/${listing.id}`}>
-          <Button className="w-full mt-2 bg-primary hover:bg-primary-medium text-primary-foreground font-medium" size="sm">
-            Ver Detalhes
-          </Button>
-        </Link>
       </div>
-    </div>
+    </Link>
   );
 }
