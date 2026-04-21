@@ -21,7 +21,7 @@ export interface Listing {
   ownerId: string;
   ownerName: string;
   featured: boolean;
-  status: "active" | "expired" | "pending";
+  status: "active" | "expired" | "pending" | "paused" | "rejected";
   views: number;
   contactsRevealed: number;
   createdAt: string;
@@ -144,7 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("listings")
       .select("*")
-      .in("status", ["active"])
+      .in("status", ["active", "paused", "pending", "rejected"])
       .order("created_at", { ascending: false });
     if (!error && data) {
       setListings(data.map(mapListing));
