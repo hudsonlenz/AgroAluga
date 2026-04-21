@@ -79,7 +79,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/como-funciona" className="hover:text-accent transition-colors">Como Funciona</Link>
           
-          <Link to="/beneficios" className="hover:text-accent transition-colors">Beneficios</Link>
+          <Link to="/beneficios" className="hover:text-accent transition-colors">Benefícios</Link>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -185,7 +185,7 @@ export default function Navbar() {
           <div className="space-y-1 pt-2">
             <Link to="/como-funciona" className="block py-2.5 hover:text-accent transition-colors text-sm" onClick={() => setOpen(false)}>Como Funciona</Link>
             
-            <Link to="/beneficios" className="block py-2.5 hover:text-accent transition-colors text-sm" onClick={() => setOpen(false)}>Beneficios</Link>
+            <Link to="/beneficios" className="block py-2.5 hover:text-accent transition-colors text-sm" onClick={() => setOpen(false)}>Benefícios</Link>
             {showAnuncieBtn && (
               <Link to={user ? "/criar-anuncio" : "/cadastro"}
                 className="block py-2.5 text-accent font-semibold hover:text-accent/80 text-sm"
