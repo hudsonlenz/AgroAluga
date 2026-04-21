@@ -77,17 +77,18 @@ export default function Index() {
     setCityInput(s.label);
     setLocationLabel(s.label);
     setCitySuggestions([]);
-    // Geocodificar a cidade selecionada
+    setLocating(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(s.nome)}&state=${encodeURIComponent(s.uf)}&country=Brazil&format=json&limit=1`,
-        { headers: { "Accept-Language": "pt-BR" } }
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(s.nome + ", " + s.uf + ", Brasil")}&format=json&limit=1&countrycodes=br`,
+        { headers: { "Accept-Language": "pt-BR", "User-Agent": "AgroAluga/1.0" } }
       );
       const data = await res.json();
       if (data.length > 0) {
         setUserCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
       }
     } catch {}
+    setLocating(false);
     setPage(1);
   };
 
