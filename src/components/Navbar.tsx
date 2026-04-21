@@ -34,6 +34,8 @@ export default function Navbar() {
   }, [user]);
 
   async function fetchUnread() {
+    // versao simplificada
+    // versao simplificada
     if (!user) return;
     const { data: convs } = await supabase
       .from("conversations")
@@ -45,7 +47,7 @@ export default function Navbar() {
       .from("messages")
       .select("*", { count: "exact", head: true })
       .in("conversation_id", convIds)
-      .eq("read", false)
+      .or("read.eq.false,read.is.null")
       .neq("sender_id", user.id);
     setUnreadCount(count || 0);
   }
