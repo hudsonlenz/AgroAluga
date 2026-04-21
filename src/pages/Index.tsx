@@ -84,7 +84,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide">
             <button
-              onClick={() => navigate("/busca")}
+              onClick={() => setActiveCategory("Todos")}
               className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 activeCategory === "Todos"
                   ? "bg-primary text-primary-foreground"
@@ -98,7 +98,7 @@ export default function Index() {
               return (
                 <button
                   key={cat}
-                  onClick={() => navigate(`/busca?category=${encodeURIComponent(cat)}`)}
+                  onClick={() => setActiveCategory(cat)}
                   className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     activeCategory === cat
                       ? "bg-primary text-primary-foreground"
