@@ -2,10 +2,11 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp, EQUIPMENT_CATEGORIES, SERVICE_CATEGORIES, Listing, CATEGORIES } from "@/contexts/AppContext";
 import ListingCard from "@/components/ListingCard";
+import ListingCardList from "@/components/ListingCardList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Tractor, Wrench, MapPin, Loader2, Navigation, X, LayoutGrid } from "lucide-react";
+import { Search, Tractor, Wrench, MapPin, Loader2, Navigation, X, LayoutGrid, LayoutList } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getCurrentPosition, reverseGeocode, distanceKm } from "@/lib/geo";
 
@@ -30,6 +31,7 @@ export default function Index() {
   const [locating, setLocating] = useState(false);
   const [radiusKm, setRadiusKm] = useState(100);
   const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const autocompleteTimer = useRef<any>(null);
 
   useEffect(() => {
@@ -77,18 +79,17 @@ export default function Index() {
     setCityInput(s.label);
     setLocationLabel(s.label);
     setCitySuggestions([]);
-    setLocating(true);
+    // Geocodificar a cidade selecionada
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(s.nome + ", " + s.uf + ", Brasil")}&format=json&limit=1&countrycodes=br`,
-        { headers: { "Accept-Language": "pt-BR", "User-Agent": "AgroAluga/1.0" } }
+        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(s.nome)}&state=${encodeURIComponent(s.uf)}&country=Brazil&format=json&limit=1`,
+        { headers: { "Accept-Language": "pt-BR" } }
       );
       const data = await res.json();
       if (data.length > 0) {
         setUserCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
       }
     } catch {}
-    setLocating(false);
     setPage(1);
   };
 
@@ -290,7 +291,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Contador + Ordenação */}
+      {/* Contador + Ordenação + Toggle */}
       <section className="py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
@@ -298,16 +299,34 @@ export default function Index() {
             {category !== "all" && ` em ${category}`}
             {locationLabel && ` · ${radiusKm}km de ${locationLabel}`}
           </p>
-          <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }}>
-            <SelectTrigger className="h-8 text-xs w-44 shrink-0"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Mais recentes</SelectItem>
-              <SelectItem value="distance">Mais próximo</SelectItem>
-              <SelectItem value="price_asc">Menor preço</SelectItem>
-              <SelectItem value="price_desc">Maior preço</SelectItem>
-              <SelectItem value="rating">Melhor avaliação</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 shrink-0">
+            <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }}>
+              <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Mais recentes</SelectItem>
+                <SelectItem value="distance">Mais próximo</SelectItem>
+                <SelectItem value="price_asc">Menor preço</SelectItem>
+                <SelectItem value="price_desc">Maior preço</SelectItem>
+                <SelectItem value="rating">Melhor avaliação</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex border border-border rounded-md overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary"}`}
+                title="Visualização em grade"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary"}`}
+                title="Visualização em lista"
+              >
+                <LayoutList className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -327,9 +346,15 @@ export default function Index() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {paginated.map((l) => <ListingCard key={l.id} listing={l} />)}
-              </div>
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {paginated.map((l) => <ListingCard key={l.id} listing={l} />)}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {paginated.map((l) => <ListingCardList key={l.id} listing={l} />)}
+                </div>
+              )}
               {totalPages > 1 && (
                 <div className="flex justify-center gap-2 mt-8">
                   {Array.from({ length: totalPages }, (_, i) => (
