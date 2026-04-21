@@ -137,6 +137,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchListings();
+    const channel = supabase
+      .channel('listings-changes')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, () => fetchListings())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, () => fetchListings())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   async function fetchListings() {
