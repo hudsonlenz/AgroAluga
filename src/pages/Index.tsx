@@ -125,11 +125,10 @@ export default function Index() {
       {/* Hero compacto com busca */}
       <section className="bg-primary py-8 px-4">
         <div className="container mx-auto max-w-3xl text-center">
-          <h1 className="text-2xl md:text-3xl font-heading font-extrabold text-primary-foreground mb-2">
+          <h1 className="text-xl md:text-2xl font-heading font-bold text-primary-foreground mb-2">
             Equipamentos e servicos agricolas perto de voce
           </h1>
           <p className="text-primary-foreground/70 text-sm mb-5">
-            {filtered.length > 0 ? `${filtered.length} anuncios disponiveis` : "Encontre o que precisa na sua regiao"}
           </p>
           <div className="flex gap-2 max-w-2xl mx-auto">
             <div className="relative flex-1">
