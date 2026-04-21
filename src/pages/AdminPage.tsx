@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, X, Eye, Users, LayoutList, Search, Filter, BarChart3, TrendingUp, MessageCircle, Star, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/UserAvatar";
 
@@ -97,44 +96,6 @@ export default function AdminPage() {
   useEffect(() => { checkAdmin(); }, [user]);
   useEffect(() => { if (isAdmin) { fetchListings(); fetchUsers(); fetchPendingCount(); fetchKpis(); } }, [isAdmin, statusFilter]);
   useEffect(() => { if (isAdmin) fetchGrowthData(); }, [isAdmin, growthPeriod]);
-
-  async function fetchGrowthData() {
-    const { data } = await supabase.rpc("get_growth_data", { days_back: growthPeriod });
-    if (!data) return;
-
-    if (growthPeriod <= 90) {
-      // Diario — mostrar todos os pontos
-      setGrowthData(data.map((d: any) => ({
-        ...d,
-        day: new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-      })));
-    } else {
-      // Agrupar por mes para periodos longos
-      const monthly: Record<string, any> = {};
-      data.forEach((d: any) => {
-        const date = new Date(d.day);
-        const key = date.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
-        if (!monthly[key]) {
-          monthly[key] = {
-            day: key,
-            total_users: 0,
-            new_users: 0,
-            total_listings: 0,
-            new_listings: 0,
-            new_messages: 0,
-            new_conversations: 0,
-          };
-        }
-        monthly[key].total_users = Number(d.total_users);
-        monthly[key].total_listings = Number(d.total_listings);
-        monthly[key].new_users += Number(d.new_users);
-        monthly[key].new_listings += Number(d.new_listings);
-        monthly[key].new_messages += Number(d.new_messages);
-        monthly[key].new_conversations += Number(d.new_conversations);
-      });
-      setGrowthData(Object.values(monthly));
-    }
-  }
 
   async function fetchGrowthData() {
     const { data } = await supabase.rpc("get_growth_data", { days_back: growthPeriod });
@@ -528,7 +489,7 @@ export default function AdminPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="equipamento">Equipamentos</SelectItem>
-                  <SelectItem value="servico">Serviços</SelectItem>
+                  <SelectItem value="servico">Servicos</SelectItem>
                 </SelectContent>
               </Select>
               <div className="relative">
@@ -767,4 +728,3 @@ export default function AdminPage() {
       )}
     </div>
   );
-}
