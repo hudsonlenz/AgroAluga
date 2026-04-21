@@ -142,7 +142,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, () => fetchListings())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, () => fetchListings())
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const handleFocus = () => fetchListings();
+    window.addEventListener('focus', handleFocus);
+    return () => { supabase.removeChannel(channel); window.removeEventListener('focus', handleFocus); };
   }, []);
 
   async function fetchListings() {
