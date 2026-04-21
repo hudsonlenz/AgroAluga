@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
@@ -38,6 +38,7 @@ export interface User {
   city: string;
   state: string;
   accountType: "contractor" | "provider";
+  blocked?: boolean;
 }
 
 export interface Review {
@@ -83,11 +84,11 @@ export const EQUIPMENT_CATEGORIES = [
   "Colheitadeiras",
   "Plantadeiras e Semeadoras",
   "Pulverizadores",
-  "Caminhões e Transporte",
-  "Irrigação e Bombeamento",
+  "Caminhoes e Transporte",
+  "Irrigacao e Bombeamento",
   "Drones Agricolas",
   "Ferramentas Eletricas",
-  "Motosserras e Roçadeiras",
+  "Motosserras e Rocadeiras",
   "Ferramentas Manuais",
   "Equipamentos de Seguranca",
   "Geradores e Compressores",
@@ -100,18 +101,21 @@ export const SERVICE_CATEGORIES = [
   "Fotografia e Mapeamento Aereo",
   "Coleta de Amostras de Solo",
   "Analise e Consultoria Agricola",
-  "Aplicação de Defensivos",
-  "Instalação de Irrigação",
-  "Serviços Veterinários",
+  "Aplicacao de Defensivos",
+  "Instalacao de Irrigacao",
+  "Servicos Veterinarios",
   "Transporte de Animais",
   "Cercamento e Terraplanagem",
   "Armazenagem de Graos",
-  "Outros Serviços",
+  "Outros Servicos",
 ];
 
 export const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];
 
 const AppContext = createContext<AppState | undefined>(undefined);
+
+const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 horas
+const INACTIVITY_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 horas de inatividade
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -121,30 +125,108 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reviews] = useState<Review[]>([]);
   const [revealedContacts, setRevealedContacts] = useState<string[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  const inactivityTimer = useRef<any>(null);
+  const sessionTimer = useRef<any>(null);
+
+  // Log de acesso
+  async function logSessionEvent(userId: string, event: string) {
+    try {
+      await supabase.from("session_logs").insert({
+        user_id: userId,
+        event,
+        user_agent: navigator.userAgent,
+      });
+    } catch {}
+  }
+
+  // Sessao unica - invalida outras sessoes ao fazer login
+  async function enforceUniqueSession(userId: string) {
+    try {
+      await supabase.from("profiles")
+        .update({ last_session_at: new Date().toISOString() })
+        .eq("id", userId);
+    } catch {}
+  }
+
+  // Resetar timer de inatividade
+  function resetInactivityTimer(userId: string) {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    inactivityTimer.current = setTimeout(async () => {
+      await logSessionEvent(userId, "logout_inatividade");
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+    }, INACTIVITY_TIMEOUT_MS);
+  }
+
+  // Iniciar timer de sessao maxima (24h)
+  function startSessionTimer(userId: string, loginTime: number) {
+    if (sessionTimer.current) clearTimeout(sessionTimer.current);
+    const elapsed = Date.now() - loginTime;
+    const remaining = SESSION_TIMEOUT_MS - elapsed;
+    if (remaining <= 0) {
+      supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      return;
+    }
+    sessionTimer.current = setTimeout(async () => {
+      await logSessionEvent(userId, "logout_sessao_expirada");
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+    }, remaining);
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) setUser(mapSupabaseUser(session.user));
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+        const loginTime = new Date(session.user.last_sign_in_at || Date.now()).getTime();
+        startSessionTimer(session.user.id, loginTime);
+        resetInactivityTimer(session.user.id);
+      }
       setAuthLoading(false);
     });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) { setUser(mapSupabaseUser(session.user)); } else { setUser(null); }
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+      } else {
+        setUser(null);
+        if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+        if (sessionTimer.current) clearTimeout(sessionTimer.current);
+      }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      if (sessionTimer.current) clearTimeout(sessionTimer.current);
+    };
   }, []);
+
+  // Monitorar atividade do usuario
+  useEffect(() => {
+    if (!user) return;
+    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+    const handleActivity = () => resetInactivityTimer(user.id);
+    events.forEach(e => window.addEventListener(e, handleActivity, { passive: true }));
+    return () => events.forEach(e => window.removeEventListener(e, handleActivity));
+  }, [user]);
 
   useEffect(() => {
     fetchListings();
     const channel = supabase
-      .channel('listings-changes')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings' }, () => fetchListings())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, () => fetchListings())
+      .channel("listings-changes")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "listings" }, () => fetchListings())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "listings" }, () => fetchListings())
       .subscribe();
     const handleFocus = () => fetchListings();
-    window.addEventListener('focus', handleFocus);
-    return () => { supabase.removeChannel(channel); window.removeEventListener('focus', handleFocus); };
+    window.addEventListener("focus", handleFocus);
+    return () => { supabase.removeChannel(channel); window.removeEventListener("focus", handleFocus); };
   }, []);
 
   async function fetchListings() {
@@ -190,21 +272,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }
 
-  async function mapAndEnrichUser(u: NonNullable<Session["user"]>): Promise<User> {
-    const m = u.user_metadata || {};
-    const { data: profile } = await supabase.from("profiles").select("blocked").eq("id", u.id).single();
-    return {
-      id: u.id,
-      name: m.name || u.email?.split("@")[0] || "Usuario",
-      email: u.email || "",
-      phone: m.phone || "",
-      city: m.city || "",
-      state: m.state || "",
-      accountType: m.accountType || "contractor",
-      blocked: profile?.blocked || false,
-    };
-  }
-
   function mapSupabaseUser(u: NonNullable<Session["user"]>): User {
     const m = u.user_metadata || {};
     return {
@@ -222,17 +289,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   function traduzirErro(msg: string): string {
     if (msg.includes("Invalid login credentials")) return "E-mail ou senha incorretos.";
     if (msg.includes("Email not confirmed")) return "Confirme seu e-mail antes de entrar.";
-    if (msg.includes("User already registered")) return "Este e-mail já está cadastrado.";
-    if (msg.includes("Password should be at least")) return "A senha deve ter no mínimo 6 caracteres.";
+    if (msg.includes("User already registered")) return "Este e-mail ja esta cadastrado.";
+    if (msg.includes("Password should be at least")) return "A senha deve ter no minimo 6 caracteres.";
     return "Ocorreu um erro. Tente novamente.";
   }
 
   const login = async (email: string, password: string): Promise<AuthError | null> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error ? { message: traduzirErro(error.message) } : null;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { message: traduzirErro(error.message) };
+    if (data.user) {
+      await logSessionEvent(data.user.id, "login");
+      await enforceUniqueSession(data.user.id);
+      startSessionTimer(data.user.id, Date.now());
+      resetInactivityTimer(data.user.id);
+    }
+    return null;
   };
 
-  const logout = async () => { await supabase.auth.signOut(); setUser(null); setSession(null); };
+  const logout = async () => {
+    if (user) await logSessionEvent(user.id, "logout_manual");
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    if (sessionTimer.current) clearTimeout(sessionTimer.current);
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+  };
 
   const register = async (data: RegisterData): Promise<AuthError | null> => {
     const { error } = await supabase.auth.signUp({
@@ -264,7 +345,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       images: data.images,
       featured: data.featured,
       status: data.status,
-      listing_type: (data as any).listingType || 'equipamento',
+      listing_type: (data as any).listingType || "equipamento",
       latitude: (data as any).latitude,
       longitude: (data as any).longitude,
     }).select().single();
@@ -278,7 +359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, session, listings, reviews, revealedContacts, authLoading, listingsLoading, login, logout, register, revealContact, addListing, updateListing }}>
+    <AppContext.Provider value={{ user, session, listings, reviews, revealedContacts, authLoading, listingsLoading, login, logout, register, revealContact, addListing, updateListing, setUser }}>
       {children}
     </AppContext.Provider>
   );
@@ -289,5 +370,3 @@ export function useApp() {
   if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
-
-// CATEGORIES exportado acima como export const
