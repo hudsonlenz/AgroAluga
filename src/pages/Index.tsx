@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Tractor, Wheat, Droplets, Truck, Wrench, Sprout, Users, BarChart3, MapPin, SlidersHorizontal } from "lucide-react";
+import { Search, Tractor, Wheat, Droplets, Truck, Wrench, Sprout, Users, BarChart3, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApp, CATEGORIES } from "@/contexts/AppContext";
@@ -54,92 +54,20 @@ export default function Index() {
       <section className="bg-primary py-10 px-4">
         <div className="container mx-auto max-w-3xl text-center">
           <h1 className="text-2xl md:text-3xl font-heading font-extrabold text-primary-foreground mb-2">
-            Equipamentos e serviços agrícolas perto de você
+            Equipamentos e servicos agricolas perto de voce
           </h1>
           <p className="text-primary-foreground/70 text-sm mb-6">
-            {featuredCount > 0 ? `${featuredCount} anúncios disponíveis` : "Encontre o que precisa na sua região"}
+            {featuredCount > 0 ? `${featuredCount} anuncios disponiveis` : "Encontre o que precisa na sua regiao"}
           </p>
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto">
             <Input
-              placeholder="O que você precisa?"
+              placeholder="O que voce precisa?"
               className="bg-card text-card-foreground border-0 h-11 flex-1"
               value={searchService}
               onChange={(e) => setSearchService(e.target.value)}
             />
             <Input
-              placeholder="Cidade ou região..."
-              classN
-cat > src/pages/Index.tsx << 'ENDOFFILE'
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, Tractor, Wheat, Droplets, Truck, Wrench, Sprout, Users, BarChart3, MapPin, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useApp, CATEGORIES } from "@/contexts/AppContext";
-import ListingCard from "@/components/ListingCard";
-import { supabase } from "@/lib/supabase";
-
-const CATEGORY_ICONS: any[] = [
-  Tractor, Wheat, Sprout, Droplets, Truck, Wrench,
-  Droplets, Users, BarChart3, Tractor, Wheat, Sprout,
-  Droplets, Truck, Wrench, Droplets, Users, BarChart3,
-  Tractor, Wheat, Sprout, Droplets, Truck, Wrench, Droplets,
-];
-
-export default function Index() {
-  const { listings } = useApp();
-  const navigate = useNavigate();
-  const [searchService, setSearchService] = useState("");
-  const [searchCity, setSearchCity] = useState("");
-  const [activeCategory, setActiveCategory] = useState("Todos");
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery") || hash.includes("type=signup")) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) navigate("/redefinir-senha");
-      });
-    }
-  }, []);
-
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const params = new URLSearchParams();
-    if (searchService) params.set("q", searchService);
-    if (searchCity) params.set("city", searchCity);
-    navigate(`/busca?${params.toString()}`);
-  };
-
-  const activeListings = listings.filter((l) => l.status === "active");
-
-  const filtered = activeCategory === "Todos"
-    ? activeListings
-    : activeListings.filter((l) => l.category === activeCategory);
-
-  const displayed = filtered.slice(0, 12);
-  const featuredCount = activeListings.length;
-
-  return (
-    <div className="bg-background min-h-screen">
-
-      {/* Hero compacto */}
-      <section className="bg-primary py-10 px-4">
-        <div className="container mx-auto max-w-3xl text-center">
-          <h1 className="text-2xl md:text-3xl font-heading font-extrabold text-primary-foreground mb-2">
-            Equipamentos e serviços agrícolas perto de você
-          </h1>
-          <p className="text-primary-foreground/70 text-sm mb-6">
-            {featuredCount > 0 ? `${featuredCount} anúncios disponíveis` : "Encontre o que precisa na sua região"}
-          </p>
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto">
-            <Input
-              placeholder="O que você precisa?"
-              className="bg-card text-card-foreground border-0 h-11 flex-1"
-              value={searchService}
-              onChange={(e) => setSearchService(e.target.value)}
-            />
-            <Input
-              placeholder="Cidade ou região..."
+              placeholder="Cidade ou regiao..."
               className="bg-card text-card-foreground border-0 h-11 flex-1"
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
@@ -186,19 +114,19 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Grid de anúncios */}
+      {/* Grid de anuncios */}
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
               {filtered.length > 0
-                ? `${filtered.length} anúncio${filtered.length > 1 ? "s" : ""} encontrado${filtered.length > 1 ? "s" : ""}`
-                : "Nenhum anúncio encontrado"}
+                ? `${filtered.length} anuncio${filtered.length > 1 ? "s" : ""} encontrado${filtered.length > 1 ? "s" : ""}`
+                : "Nenhum anuncio encontrado"}
               {activeCategory !== "Todos" && ` em ${activeCategory}`}
             </p>
             <Link to="/busca">
               <Button variant="outline" size="sm" className="gap-2 text-xs">
-                <SlidersHorizontal className="h-3.5 w-3.5" /> Filtros avançados
+                <SlidersHorizontal className="h-3.5 w-3.5" /> Filtros avancados
               </Button>
             </Link>
           </div>
@@ -214,7 +142,7 @@ export default function Index() {
                 <div className="text-center mt-10">
                   <Link to={activeCategory === "Todos" ? "/busca" : `/busca?category=${encodeURIComponent(activeCategory)}`}>
                     <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8">
-                      Ver todos os {filtered.length} anúncios
+                      Ver todos os {filtered.length} anuncios
                     </Button>
                   </Link>
                 </div>
@@ -223,11 +151,11 @@ export default function Index() {
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               <Tractor className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-medium mb-2">Nenhum anúncio nessa categoria ainda</p>
+              <p className="font-medium mb-2">Nenhum anuncio nessa categoria ainda</p>
               <p className="text-sm mb-6">Seja o primeiro a anunciar!</p>
               <Link to="/criar-anuncio">
                 <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
-                  + Criar anúncio
+                  + Criar anuncio
                 </Button>
               </Link>
             </div>
@@ -238,8 +166,8 @@ export default function Index() {
       {/* CTA para anunciantes */}
       <section className="py-12 bg-primary/5 border-t border-border">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-xl font-heading font-bold mb-2">Tem equipamentos ou presta serviços agrícolas?</h2>
-          <p className="text-muted-foreground text-sm mb-6">Anuncie gratuitamente e alcance produtores da sua região.</p>
+          <h2 className="text-xl font-heading font-bold mb-2">Tem equipamentos ou presta servicos agricolas?</h2>
+          <p className="text-muted-foreground text-sm mb-6">Anuncie gratuitamente e alcance produtores da sua regiao.</p>
           <Link to="/criar-anuncio">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8">
               + Anunciar gratuitamente
