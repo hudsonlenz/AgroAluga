@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, MessageCircle, ExternalLink } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 
 interface Message {
   id: string;
@@ -21,8 +22,8 @@ interface Conversation {
   buyer_id: string;
   seller_id: string;
   created_at: string;
-  listing?: { title: string; images: string[] };
-  other_user?: { name: string };
+  listing?: { title: string; images: string[]; price: number; price_unit: string };
+  other_user?: { id: string; name: string };
 }
 
 export default function MessagesPage() {
@@ -34,7 +35,7 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [pendingNew, setPendingNew] = useState<{ listingId: string; sellerId: string } | null>(null);
-  const [pendingListing, setPendingListing] = useState<{ title: string; images: string[] } | null>(null);
+  const [pendingListing, setPendingListing] = useState<{ title: string; images: string[]; price: number; price_unit: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,9 +45,7 @@ export default function MessagesPage() {
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
+  useEffect(() => { fetchConversations(); }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -75,9 +74,9 @@ export default function MessagesPage() {
       .from("conversations")
       .select(`
         *,
-        listing:listings(title, images),
-        buyer:profiles!conversations_buyer_id_fkey(name),
-        seller:profiles!conversations_seller_id_fkey(name)
+        listing:listings(title, images, price, price_unit),
+        buyer:profiles!conversations_buyer_id_fkey(id, name),
+        seller:profiles!conversations_seller_id_fkey(id, name)
       `)
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
@@ -98,7 +97,7 @@ export default function MessagesPage() {
         } else {
           const { data: listingData } = await supabase
             .from("listings")
-            .select("title, images")
+            .select("title, images, price, price_unit")
             .eq("id", newListingId)
             .single();
           setPendingListing(listingData);
@@ -120,74 +119,42 @@ export default function MessagesPage() {
       .order("created_at", { ascending: true });
     if (data) {
       setMessages(data);
-      // Scroll para o fim apenas apos carregar as mensagens
       setTimeout(() => {
-        if (messagesRef.current) {
-          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-        }
+        if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
       }, 50);
     }
   }
 
   async function markAsRead(conversationId: string) {
-    await supabase
-      .from("messages")
-      .update({ read: true })
-      .eq("conversation_id", conversationId)
-      .neq("sender_id", user.id);
+    await supabase.from("messages").update({ read: true })
+      .eq("conversation_id", conversationId).neq("sender_id", user.id);
   }
 
   async function sendMessage() {
     if (!input.trim()) return;
-    if (user?.blocked) {
-      alert("Sua conta esta bloqueada e nao pode enviar mensagens.");
-      return;
-    }
+    if (user?.blocked) { alert("Sua conta esta bloqueada e nao pode enviar mensagens."); return; }
     const content = input.trim();
     setInput("");
 
     if (pendingNew) {
       const { data: conv, error } = await supabase
         .from("conversations")
-        .insert({
-          listing_id: pendingNew.listingId,
-          buyer_id: user.id,
-          seller_id: pendingNew.sellerId,
-        })
-        .select(`
-          *,
-          listing:listings(title, images),
-          seller:profiles!conversations_seller_id_fkey(name)
-        `)
+        .insert({ listing_id: pendingNew.listingId, buyer_id: user.id, seller_id: pendingNew.sellerId })
+        .select(`*, listing:listings(title, images, price, price_unit), seller:profiles!conversations_seller_id_fkey(id, name)`)
         .single();
 
       if (error || !conv) return;
-
-      const newConv = {
-        ...conv,
-        listing: conv.listing,
-        other_user: conv.seller,
-      };
-
+      const newConv = { ...conv, listing: conv.listing, other_user: conv.seller };
       setConversations((prev) => [newConv, ...prev]);
       setSelected(newConv);
       setPendingNew(null);
       setPendingListing(null);
-
-      await supabase.from("messages").insert({
-        conversation_id: conv.id,
-        sender_id: user.id,
-        content,
-      });
+      await supabase.from("messages").insert({ conversation_id: conv.id, sender_id: user.id, content });
       return;
     }
 
     if (!selected) return;
-    await supabase.from("messages").insert({
-      conversation_id: selected.id,
-      sender_id: user.id,
-      content,
-    });
+    await supabase.from("messages").insert({ conversation_id: selected.id, sender_id: user.id, content });
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -195,16 +162,17 @@ export default function MessagesPage() {
   };
 
   const activeListingId = pendingNew ? pendingNew.listingId : selected?.listing_id;
-  const activeHeader = pendingNew
-    ? { name: "", title: pendingListing?.title || "Novo anuncio", image: pendingListing?.images?.[0] }
-    : selected
-    ? { name: selected.other_user?.name || "", title: selected.listing?.title || "", image: selected.listing?.images?.[0] }
-    : null;
+
+  const activeListing = pendingNew
+    ? pendingListing
+    : selected?.listing;
+
+  const activeOtherUser = pendingNew
+    ? { id: pendingNew.sellerId, name: "" }
+    : selected?.other_user || null;
 
   if (loading) return (
-    <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">
-      Carregando mensagens...
-    </div>
+    <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Carregando mensagens...</div>
   );
 
   const hasContent = conversations.length > 0 || pendingNew;
@@ -213,9 +181,7 @@ export default function MessagesPage() {
     <div className="container mx-auto px-4 py-20 text-center">
       <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
       <p className="text-muted-foreground mb-4">Voce ainda nao tem conversas.</p>
-      <Link to="/busca">
-        <Button className="bg-primary text-primary-foreground">Buscar servicos</Button>
-      </Link>
+      <Link to="/busca"><Button className="bg-primary text-primary-foreground">Buscar servicos</Button></Link>
     </div>
   );
 
@@ -239,8 +205,7 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-3">
                   <img
                     src={conv.listing?.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
-                    alt=""
-                    className="h-10 w-10 rounded-md object-cover shrink-0"
+                    alt="" className="h-10 w-10 rounded-md object-cover shrink-0"
                   />
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{conv.other_user?.name || "Usuario"}</p>
@@ -254,42 +219,49 @@ export default function MessagesPage() {
 
         {/* Area de chat */}
         <div className="md:col-span-2 border border-border rounded-lg overflow-hidden flex flex-col">
-          {activeHeader ? (
+          {activeListing || pendingNew ? (
             <>
-              {/* Cabecalho com nome + link para anuncio */}
-              <div className="p-3 border-b border-border bg-secondary flex items-center gap-3">
-                <img
-                  src={activeHeader.image || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
-                  alt=""
-                  className="h-10 w-10 rounded-md object-cover shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  {activeHeader.name && (
-                    <p className="font-semibold text-sm truncate">{activeHeader.name}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground truncate">{activeHeader.title}</p>
+              {/* Cabecalho: anuncio a esquerda, anunciante a direita */}
+              <div className="px-4 py-3 border-b border-border bg-secondary flex items-center justify-between gap-3">
+                {/* Esquerda: info do anuncio */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={activeListing?.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
+                    alt="" className="h-12 w-12 rounded-md object-cover shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{activeListing?.title || "Anuncio"}</p>
+                    {activeListing?.price && (
+                      <p className="text-xs text-primary font-medium">
+                        R$ {activeListing.price}/{activeListing.price_unit}
+                      </p>
+                    )}
+                    {activeListingId && (
+                      <Link to={`/anuncio/${activeListingId}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+                        <ExternalLink className="h-3 w-3" /> Ver anuncio
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                {activeListingId && (
-                  <Link
-                    to={`/anuncio/${activeListingId}`}
-                    className="shrink-0 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium bg-primary/10 px-2.5 py-1.5 rounded-md transition-colors"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Ver anuncio
-                  </Link>
+
+                {/* Direita: anunciante */}
+                {activeOtherUser && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Anunciante</p>
+                      <p className="text-sm font-medium">{activeOtherUser.name}</p>
+                    </div>
+                    <UserAvatar userId={activeOtherUser.id} name={activeOtherUser.name || ""} size="sm" />
+                  </div>
                 )}
               </div>
 
               <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                 {pendingNew && (
-                  <p className="text-center text-sm text-muted-foreground py-8">
-                    Envie uma mensagem para iniciar a conversa!
-                  </p>
+                  <p className="text-center text-sm text-muted-foreground py-8">Envie uma mensagem para iniciar a conversa!</p>
                 )}
                 {!pendingNew && messages.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-8">
-                    Nenhuma mensagem ainda.
-                  </p>
+                  <p className="text-center text-sm text-muted-foreground py-8">Nenhuma mensagem ainda.</p>
                 )}
                 {messages.map((msg) => {
                   const isMe = msg.sender_id === user.id;
@@ -308,13 +280,8 @@ export default function MessagesPage() {
               </div>
 
               <div className="p-3 border-t border-border flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Digite uma mensagem..."
-                  className="flex-1"
-                />
+                <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+                  placeholder="Digite uma mensagem..." className="flex-1" />
                 <Button onClick={sendMessage} disabled={!input.trim()} className="bg-primary text-primary-foreground">
                   <Send className="h-4 w-4" />
                 </Button>
