@@ -19,7 +19,7 @@ export default function TermosPage() {
           <h2 className="text-xl font-heading font-semibold mb-3">2. Aceitação dos Termos</h2>
           <p className="text-muted-foreground leading-relaxed">
             Ao se cadastrar ou utilizar o AgroAluga, você declara ter lido, compreendido e concordado com estes
-            Termos de Uso. Caso nao concorde com qualquer disposição, não utilize a plataforma.
+            Termos de Uso. Caso não concorde com qualquer disposição, não utilize a plataforma.
           </p>
         </section>
 
@@ -35,13 +35,13 @@ export default function TermosPage() {
         <section>
           <h2 className="text-xl font-heading font-semibold mb-3">4. Publicação de Anúncios</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Ao publicar um anuncio, o usuario declara que:
+            Ao publicar um anúncio, o usuário declara que:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
             <li>E proprietario ou tem autorização para anunciar o equipamento ou serviço</li>
             <li>As informações, fotos e preços são verdadeiros e atualizados</li>
             <li>O conteúdo não viola direitos de terceiros nem a legislação brasileira</li>
-            <li>Nao serao publicados conteudos ofensivos, enganosos, ilegais ou inadequados</li>
+            <li>Não serão publicados conteúdos ofensivos, enganosos, ilegais ou inadequados</li>
           </ul>
           <p className="text-muted-foreground leading-relaxed mt-3">
             Todos os anúncios passam por moderação antes de serem publicados. O AgroAluga reserva-se o direito
@@ -53,7 +53,7 @@ export default function TermosPage() {
           <h2 className="text-xl font-heading font-semibold mb-3">5. Responsabilidade pelas Negociações</h2>
           <p className="text-muted-foreground leading-relaxed">
             O AgroAluga e uma plataforma de conexão e não participa das negociações, contratos ou transações
-            realizadas entre usuários. A plataforma nao se responsabiliza por:
+            realizadas entre usuários. A plataforma não se responsabiliza por:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
             <li>Qualidade, estado ou disponibilidade dos equipamentos e serviços anunciados</li>
@@ -89,9 +89,9 @@ export default function TermosPage() {
         <section>
           <h2 className="text-xl font-heading font-semibold mb-3">8. Propriedade Intelectual</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Todo o conteudo da plataforma — marca, design, textos e funcionalidades — e de propriedade do
-            AgroAluga. Ao publicar fotos e textos na plataforma, o usuario concede ao AgroAluga licenca nao
-            exclusiva para exibir esse conteudo dentro da plataforma.
+            Todo o conteúdo da plataforma — marca, design, textos e funcionalidades — e de propriedade do
+            AgroAluga. Ao publicar fotos e textos na plataforma, o usuário concede ao AgroAluga licenca nao
+            exclusiva para exibir esse conteúdo dentro da plataforma.
           </p>
         </section>
 

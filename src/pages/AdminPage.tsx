@@ -240,7 +240,7 @@ export default function AdminPage() {
   }
 
   async function deleteListing(id: string) {
-    if (!confirm("Tem certeza que deseja DELETAR este anuncio permanentemente?")) return;
+    if (!confirm("Tem certeza que deseja DELETAR este anúncio permanentemente?")) return;
     setProcessing(id);
     await supabase.from("listings").delete().eq("id", id);
     setListings((prev) => prev.filter((l) => l.id !== id));
@@ -511,7 +511,7 @@ export default function AdminPage() {
                 <p className="text-muted-foreground text-sm">Carregando...</p>
               ) : filteredListings.length === 0 ? (
                 <div className="bg-card border border-border rounded-lg p-8 text-center text-muted-foreground">
-                  Nenhum anuncio encontrado.
+                  Nenhum anúncio encontrado.
                 </div>
               ) : filteredListings.map((l) => (
                 <div key={l.id}

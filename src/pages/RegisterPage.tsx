@@ -79,7 +79,7 @@ export default function RegisterPage() {
         </div>
         <h1 className="text-xl font-heading font-bold text-center mb-2">Criar sua conta gratis</h1>
         <p className="text-center text-sm text-muted-foreground mb-6">
-          Com uma conta voce pode contratar e anunciar servicos
+          Com uma conta você pode contratar e anunciar serviços
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-destructive text-center bg-destructive/10 p-3 rounded-md">{error}</p>}

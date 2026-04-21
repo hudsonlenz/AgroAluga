@@ -179,7 +179,7 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
                     <button
                       onClick={() => setReporting(reporting === r.id ? null : r.id)}
                       className="text-muted-foreground hover:text-destructive transition-colors"
-                      title="Reportar avaliacao"
+                      title="Reportar avaliação"
                     >
                       <Flag className="h-3.5 w-3.5" />
                     </button>
@@ -191,7 +191,7 @@ export default function ReviewSection({ listingId, ownerId, revealed }: ReviewSe
               {/* Formulário de reporte */}
               {reporting === r.id && (
                 <div className="mt-2 space-y-2 border-t border-border pt-2">
-                  <p className="text-xs font-medium text-destructive">Reportar avaliacao</p>
+                  <p className="text-xs font-medium text-destructive">Reportar avaliação</p>
                   <Textarea
                     value={reportReason}
                     onChange={(e) => setReportReason(e.target.value)}

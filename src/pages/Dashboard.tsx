@@ -16,7 +16,7 @@ export default function Dashboard() {
   const myListings = listings.filter((l) => l.ownerId === user.id && l.status !== "expired");
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este anuncio?")) return;
+    if (!confirm("Tem certeza que deseja excluir este anúncio?")) return;
     setDeleting(id);
     await supabase.from("listings").delete().eq("id", id);
     updateListing(id, { status: "expired" });

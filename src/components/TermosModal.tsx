@@ -44,7 +44,7 @@ export default function TermosModal({ open, onAccept, onClose }: TermosModalProp
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">2. Aceitação dos Termos</h3>
-            <p>Ao se cadastrar ou utilizar o AgroAluga, você declara ter lido, compreendido e concordado com estes Termos de Uso. Caso nao concorde com qualquer disposição, não utilize a plataforma.</p>
+            <p>Ao se cadastrar ou utilizar o AgroAluga, você declara ter lido, compreendido e concordado com estes Termos de Uso. Caso não concorde com qualquer disposição, não utilize a plataforma.</p>
           </section>
 
           <section>
@@ -54,12 +54,12 @@ export default function TermosModal({ open, onAccept, onClose }: TermosModalProp
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">4. Publicação de Anúncios</h3>
-            <p>Ao publicar um anuncio, o usuario declara que e proprietario ou tem autorização para anunciar o equipamento ou serviço, que as informações, fotos e preços são verdadeiros e atualizados, e que o conteúdo não viola direitos de terceiros nem a legislação brasileira. Nao serao publicados conteudos ofensivos, enganosos, ilegais ou inadequados. Todos os anúncios passam por moderação antes de serem publicados.</p>
+            <p>Ao publicar um anúncio, o usuário declara que é proprietário ou tem autorização para anunciar o equipamento ou serviço, que as informações, fotos e preços são verdadeiros e atualizados, e que o conteúdo não viola direitos de terceiros nem a legislação brasileira. Não serão publicados conteúdos ofensivos, enganosos, ilegais ou inadequados. Todos os anúncios passam por moderação antes de serem publicados.</p>
           </section>
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">5. Responsabilidade pelas Negociações</h3>
-            <p>O AgroAluga e uma plataforma de conexão e não participa das negociações, contratos ou transações realizadas entre usuários. A plataforma nao se responsabiliza por qualidade, estado ou disponibilidade dos equipamentos e serviços anunciados, descumprimento de acordos entre as partes, danos causados durante a prestação de serviços ou uso de equipamentos, ou veracidade das informações fornecidas pelos usuários. Recomendamos que todos os acordos sejam formalizados por escrito entre as partes.</p>
+            <p>O AgroAluga e uma plataforma de conexão e não participa das negociações, contratos ou transações realizadas entre usuários. A plataforma não se responsabiliza por qualidade, estado ou disponibilidade dos equipamentos e serviços anunciados, descumprimento de acordos entre as partes, danos causados durante a prestação de serviços ou uso de equipamentos, ou veracidade das informações fornecidas pelos usuários. Recomendamos que todos os acordos sejam formalizados por escrito entre as partes.</p>
           </section>
 
           <section>
@@ -74,7 +74,7 @@ export default function TermosModal({ open, onAccept, onClose }: TermosModalProp
 
           <section>
             <h3 className="font-semibold text-foreground mb-2">8. Propriedade Intelectual</h3>
-            <p>Todo o conteudo da plataforma — marca, design, textos e funcionalidades — e de propriedade do AgroAluga. Ao publicar fotos e textos na plataforma, o usuario concede ao AgroAluga licenca nao exclusiva para exibir esse conteudo dentro da plataforma.</p>
+            <p>Todo o conteúdo da plataforma — marca, design, textos e funcionalidades — é de propriedade do AgroAluga. Ao publicar fotos e textos na plataforma, o usuário concede ao AgroAluga licença não exclusiva para exibir esse conteúdo dentro da plataforma.</p>
           </section>
 
           <section>
