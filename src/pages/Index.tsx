@@ -20,7 +20,8 @@ export default function Index() {
   const [searchActive, setSearchActive] = useState("");
   const [activeType, setActiveType] = useState("all");
   const [category, setCategory] = useState("all");
-  const [priceRange, setPriceRange] = useState("all");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [page, setPage] = useState(1);
   const [cityInput, setCityInput] = useState("");
@@ -79,9 +80,8 @@ export default function Index() {
     let result = listings.filter((l) => l.status === "active");
     if (activeType !== "all") result = result.filter((l) => (l as any).listingType === activeType);
     if (category !== "all") result = result.filter((l) => l.category === category);
-    if (priceRange === "low") result = result.filter((l) => l.price <= 100);
-    else if (priceRange === "mid") result = result.filter((l) => l.price > 100 && l.price <= 200);
-    else if (priceRange === "high") result = result.filter((l) => l.price > 200);
+    if (priceMin !== "") result = result.filter((l) => l.price >= Number(priceMin));
+    if (priceMax !== "") result = result.filter((l) => l.price <= Number(priceMax));
     if (searchActive) result = result.filter((l) =>
       l.title.toLowerCase().includes(searchActive.toLowerCase()) ||
       l.category.toLowerCase().includes(searchActive.toLowerCase()) ||
@@ -89,19 +89,20 @@ export default function Index() {
     );
     if (userCoords) result = result.filter((l) => getDistance(l) <= radiusKm);
     if (sortBy === "distance") result = [...result].sort((a, b) => getDistance(a) - getDistance(b));
-    else if (sortBy === "price") result = [...result].sort((a, b) => a.price - b.price);
+    else if (sortBy === "price_asc") result = [...result].sort((a, b) => a.price - b.price);
+    else if (sortBy === "price_desc") result = [...result].sort((a, b) => b.price - a.price);
     else if (sortBy === "rating") result = [...result].sort((a, b) => b.rating - a.rating);
     else result = [...result].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     return result;
-  }, [listings, activeType, category, priceRange, sortBy, searchActive, userCoords, radiusKm]);
+  }, [listings, activeType, category, priceMin, priceMax, sortBy, searchActive, userCoords, radiusKm]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const hasActiveFilters = activeType !== "all" || category !== "all" || priceRange !== "all" || searchActive || userCoords;
+  const hasActiveFilters = activeType !== "all" || category !== "all" || priceMin || priceMax || searchActive || userCoords;
 
   const clearFilters = () => {
-    setActiveType("all"); setCategory("all"); setPriceRange("all");
+    setActiveType("all"); setCategory("all"); setPriceMin(""); setPriceMax("");
     setSortBy("recent"); setSearchQuery(""); setSearchActive("");
     setUserCoords(null); setLocationLabel(""); setCityInput(""); setPage(1);
   };
@@ -138,100 +139,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Filtros sempre visiveis */}
-      <section className="bg-card border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-
-            {/* Categoria (dropdown) */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Categoria</label>
-              <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {categoriesForType.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Preco */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Faixa de preco</label>
-              <Select value={priceRange} onValueChange={(v) => { setPriceRange(v); setPage(1); }}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="low">Ate R$ 100</SelectItem>
-                  <SelectItem value="mid">R$ 100 - R$ 200</SelectItem>
-                  <SelectItem value="high">Acima de R$ 200</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Ordenacao */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Ordenar por</label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Mais recentes</SelectItem>
-                  <SelectItem value="distance">Mais proximo</SelectItem>
-                  <SelectItem value="price">Menor preco</SelectItem>
-                  <SelectItem value="rating">Melhor avaliacao</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Localizacao */}
-            <div className="md:col-span-2">
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Localizacao</label>
-              <div className="flex gap-1">
-                <Input
-                  placeholder="Sua cidade..."
-                  className="h-9 text-sm flex-1"
-                  value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCitySearch(cityInput)}
-                />
-                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => handleCitySearch(cityInput)} disabled={locating}>
-                  {locating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-                </Button>
-                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handleGPS} disabled={locating} title="Usar minha localizacao">
-                  <Navigation className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              {locationLabel && (
-                <p className="text-xs text-primary mt-1 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> {locationLabel}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {userCoords && (
-            <div className="mt-3 flex items-center gap-3">
-              <label className="text-xs font-medium text-muted-foreground">Raio:</label>
-              <Select value={String(radiusKm)} onValueChange={(v) => { setRadiusKm(Number(v)); setPage(1); }}>
-                <SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["25", "50", "100", "200", "500"].map((r) => (
-                    <SelectItem key={r} value={r}>{r} km</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {hasActiveFilters && (
-            <button onClick={clearFilters} className="mt-3 flex items-center gap-1 text-xs text-destructive hover:text-destructive/80">
-              <X className="h-3 w-3" /> Limpar filtros
-            </button>
-          )}
-        </div>
-      </section>
-
-      {/* Pills: Todos / Equipamentos / Servicos */}
+      {/* Pills tipo — sticky abaixo da navbar */}
       <section className="bg-card border-b border-border sticky top-16 z-40 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex gap-2 py-3">
@@ -257,17 +165,118 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Grid de anuncios */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">
-              {filtered.length} anuncio{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
-              {category !== "all" && ` em ${category}`}
-              {locationLabel && ` · ${radiusKm}km de ${locationLabel}`}
-            </p>
+      {/* Filtros sempre visiveis */}
+      <section className="bg-card border-b border-border">
+        <div className="container mx-auto px-4 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+            {/* Categoria */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Categoria</label>
+              <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {categoriesForType.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Preco min/max */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Preco (R$)</label>
+              <div className="flex gap-1 items-center">
+                <Input
+                  placeholder="Min"
+                  type="number"
+                  min="0"
+                  className="h-9 text-sm"
+                  value={priceMin}
+                  onChange={(e) => { setPriceMin(e.target.value); setPage(1); }}
+                />
+                <span className="text-muted-foreground text-xs shrink-0">ate</span>
+                <Input
+                  placeholder="Max"
+                  type="number"
+                  min="0"
+                  className="h-9 text-sm"
+                  value={priceMax}
+                  onChange={(e) => { setPriceMax(e.target.value); setPage(1); }}
+                />
+              </div>
+            </div>
+
+            {/* Localizacao */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Localizacao</label>
+              <div className="flex gap-1">
+                <Input
+                  placeholder="Sua cidade..."
+                  className="h-9 text-sm flex-1"
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCitySearch(cityInput)}
+                />
+                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => handleCitySearch(cityInput)} disabled={locating}>
+                  {locating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+                </Button>
+                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handleGPS} disabled={locating} title="GPS">
+                  <Navigation className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {locationLabel && (
+                <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> {locationLabel}
+                </p>
+              )}
+            </div>
+
+            {/* Raio (so se tiver localizacao) */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Raio de busca</label>
+              <Select value={String(radiusKm)} onValueChange={(v) => { setRadiusKm(Number(v)); setPage(1); }} disabled={!userCoords}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["25", "50", "100", "200", "500"].map((r) => (
+                    <SelectItem key={r} value={r}>{r} km</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="mt-3 flex items-center gap-1 text-xs text-destructive hover:text-destructive/80">
+              <X className="h-3 w-3" /> Limpar filtros
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Contador + Ordenacao em paralelo */}
+      <section className="py-4">
+        <div className="container mx-auto px-4 flex items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">{filtered.length}</strong> anuncio{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
+            {category !== "all" && ` em ${category}`}
+            {locationLabel && ` · ${radiusKm}km de ${locationLabel}`}
+          </p>
+          <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }}>
+            <SelectTrigger className="h-8 text-xs w-44 shrink-0"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Mais recentes</SelectItem>
+              <SelectItem value="distance">Mais proximo</SelectItem>
+              <SelectItem value="price_asc">Menor preco</SelectItem>
+              <SelectItem value="price_desc">Maior preco</SelectItem>
+              <SelectItem value="rating">Melhor avaliacao</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      {/* Grid de anuncios */}
+      <section className="pb-8">
+        <div className="container mx-auto px-4">
           {paginated.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Tractor className="h-12 w-12 mx-auto mb-4 opacity-30" />
