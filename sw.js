@@ -1,1 +1,0 @@
-// AgroAluga Service Worker
