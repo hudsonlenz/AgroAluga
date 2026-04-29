@@ -1,4 +1,3 @@
-import { NotificationButton } from "@/components/NotificationButton";
 import { Link, useLocation } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { useEffect, useState, useRef } from "react";
@@ -91,8 +90,7 @@ export default function Navbar() {
               </Button>
             </Link>
           )}
-          <NotificationButton />
-            {user ? (
+          {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -197,8 +195,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <NotificationButton />
-            {user ? (
+          {user ? (
             <>
               <div className="border-t border-white/20 mt-3 pt-3 flex items-center gap-2 pb-2">
                 <UserAvatar userId={user.id} name={user.name} size="sm" />
