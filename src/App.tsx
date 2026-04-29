@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -29,6 +30,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { authLoading } = useApp();
+  useNotifications();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,7 +83,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppProvider>
-      <AppInner />
         <Toaster />
         <Sonner />
         <BrowserRouter>
