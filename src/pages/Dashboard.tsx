@@ -1,3 +1,4 @@
+import { initOneSignal } from "@/hooks/useNotifications";
 import { useApp } from "@/contexts/AppContext";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
