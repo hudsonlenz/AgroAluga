@@ -66,7 +66,7 @@ export function useNotifications() {
     const ch = supabase.channel(`notifications-${user.id}`);
     ch.on("postgres_changes",
       { event: "INSERT", schema: "public", table: "messages" },
-      (payload: any) => {
+      async (payload: any) => {
         if (payload.new?.sender_id === user.id) return;
         const onMessagesPage = window.location.pathname === "/mensagens";
         const siteVisible = document.visibilityState === "visible";
