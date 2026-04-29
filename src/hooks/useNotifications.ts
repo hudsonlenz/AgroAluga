@@ -8,52 +8,46 @@ declare global {
   interface Window { OneSignalDeferred?: any[]; OneSignal?: any; }
 }
 
-export async function initOneSignal(userId?: string) {
-  // Carrega o SDK se ainda nao foi carregado
-  if (!document.getElementById("onesignal-sdk")) {
-    await new Promise<void>((resolve) => {
-      const s = document.createElement("script");
-      s.id = "onesignal-sdk";
-      s.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-      s.async = true;
-      s.onload = () => resolve();
-      document.head.appendChild(s);
-    });
-  }
-
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async (OS: any) => {
-    // Inicializa somente uma vez
-    if (!OS._initAlreadyCalled) {
-      OS._initAlreadyCalled = true;
-      await OS.init({
-        appId: ONESIGNAL_APP_ID,
-        serviceWorkerPath: "/OneSignalSDKWorker.js",
-        notifyButton: { enable: false },
-      });
-    }
-    // Aguarda SW estar registrado antes de fazer login
-    if (userId) {
-      try {
-        await OS.login(userId);
-      } catch(e) {
-        console.warn("OneSignal login error:", e);
-      }
-    }
-  });
-}
-
 export function useNotifications() {
   const { user } = useApp();
   const channelRef = useRef<any>(null);
   const initializedRef = useRef(false);
 
   useEffect(() => {
+    // Inicializa OneSignal uma vez
+    if (!document.getElementById("onesignal-sdk")) {
+      const s = document.createElement("script");
+      s.id = "onesignal-sdk";
+      s.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OS: any) => {
+      if (OS._initDone) return;
+      OS._initDone = true;
+      await OS.init({
+        appId: ONESIGNAL_APP_ID,
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
+        notifyButton: { enable: false },
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     if (!user || initializedRef.current) return;
     initializedRef.current = true;
 
-    // Aguarda 2s para garantir que o SW esta registrado
-    setTimeout(() => initOneSignal(user.id), 2000);
+    // Usa tag para identificar usuario em vez de login
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OS: any) => {
+      try {
+        // Tag com user_id para o backend encontrar o subscriber
+        await OS.User.addTags({ user_id: user.id });
+      } catch(e) {
+        console.warn("OneSignal tag error:", e);
+      }
+    });
 
     const ch = supabase.channel(`notifications-${user.id}`);
     ch.on("postgres_changes",
@@ -83,4 +77,16 @@ export function useNotifications() {
   }, [user]);
 
   return {};
+}
+
+export async function initOneSignal(userId?: string) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async (OS: any) => {
+    try {
+      await OS.Notifications.requestPermission();
+      if (userId) await OS.User.addTags({ user_id: userId });
+    } catch(e) {
+      console.warn("OneSignal permission error:", e);
+    }
+  });
 }
