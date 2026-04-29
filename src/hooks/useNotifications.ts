@@ -38,23 +38,13 @@ export function useNotifications() {
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: false,
         notifyButton: { enable: false },
-        promptOptions: {
-          slidedown: {
-            prompts: [{
-              type: "push",
-              autoPrompt: true,
-              text: {
-                actionMessage: "O AgroAluga quer enviar notificacoes sobre mensagens e atualizacoes dos seus anuncios.",
-                acceptButton: "Permitir",
-                cancelButton: "Agora nao",
-              },
-              delay: { pageViews: 1, timeDelay: 5 },
-            }],
-          },
-        },
       });
       if (user) {
-        OneSignal.login(user.id);
+        await OneSignal.login(user.id);
+        const permission = await OneSignal.Notifications.permissionNative;
+        if (permission === "default") {
+          await OneSignal.Notifications.requestPermission();
+        }
       }
     });
   }
@@ -66,10 +56,19 @@ export function useNotifications() {
   useEffect(() => {
     if (!user) return;
 
-    // Associa o usuario ao OneSignal
-    if (window.OneSignal) {
-      window.OneSignal.login(user.id);
-    }
+    // Associa o usuario ao OneSignal e pede permissao
+    const linkUser = async () => {
+      await loadOneSignal();
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async (OneSignal: any) => {
+        await OneSignal.login(user.id);
+        const permission = OneSignal.Notifications.permissionNative;
+        if (permission === "default") {
+          await OneSignal.Notifications.requestPermission();
+        }
+      });
+    };
+    linkUser();
 
     // Realtime para notificacoes locais (site aberto)
     const ch = supabase.channel(`notifications-${user.id}`);
