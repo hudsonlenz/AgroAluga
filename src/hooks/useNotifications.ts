@@ -2,127 +2,127 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useApp } from "@/contexts/AppContext";
 
+const ONESIGNAL_APP_ID = "c2d4c4d9-1b0d-4263-90e2-a6413ae117cd";
+
+declare global {
+  interface Window {
+    OneSignalDeferred?: any[];
+    OneSignal?: any;
+  }
+}
+
+function loadOneSignal(): Promise<void> {
+  return new Promise((resolve) => {
+    if (document.getElementById("onesignal-sdk")) { resolve(); return; }
+    const script = document.createElement("script");
+    script.id = "onesignal-sdk";
+    script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+    script.async = true;
+    script.onload = () => resolve();
+    document.head.appendChild(script);
+  });
+}
+
 export function useNotifications() {
   const { user } = useApp();
   const channelRef = useRef<any>(null);
+  const initializedRef = useRef(false);
 
-  async function registerServiceWorker() {
-    if (!("serviceWorker" in navigator) || !("Notification" in window)) return false;
-    try {
-      const reg = await navigator.serviceWorker.register("/sw.js");
-      console.log("SW registrado:", reg.scope);
-      return reg;
-    } catch (e) {
-      console.error("Erro ao registrar SW:", e);
-      return false;
-    }
-  }
-
-  async function requestPermission() {
-    if (!("Notification" in window)) return false;
-    if (Notification.permission === "granted") return true;
-    if (Notification.permission === "denied") return false;
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
-  }
-
-  function showNotification(title: string, body: string, url: string, tag: string) {
-    if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification(title, {
-        body,
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-        tag,
-        renotify: true,
-        data: { url },
-        vibrate: [200, 100, 200],
-      } as NotificationOptions);
+  async function initOneSignal() {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    await loadOneSignal();
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OneSignal: any) => {
+      await OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: false,
+        notifyButton: { enable: false },
+        promptOptions: {
+          slidedown: {
+            prompts: [{
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "O AgroAluga quer enviar notificacoes sobre mensagens e atualizacoes dos seus anuncios.",
+                acceptButton: "Permitir",
+                cancelButton: "Agora nao",
+              },
+              delay: { pageViews: 1, timeDelay: 5 },
+            }],
+          },
+        },
+      });
+      if (user) {
+        OneSignal.login(user.id);
+      }
     });
   }
 
-  async function init() {
-    if (!user) return;
-    const granted = await requestPermission();
-    if (!granted) return;
-    await registerServiceWorker();
-
-    // Realtime — mensagens novas
-    channelRef.current = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `receiver_id=eq.${user.id}`,
-        },
-        (payload: any) => {
-          if (document.visibilityState === "visible") return;
-          showNotification(
-            "Nova mensagem — AgroAluga",
-            payload.new?.content?.substring(0, 80) || "Voce recebeu uma nova mensagem.",
-            "/mensagens",
-            `msg-${payload.new?.id}`
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "listings",
-          filter: `owner_id=eq.${user.id}`,
-        },
-        (payload: any) => {
-          const status = payload.new?.status;
-          const title = payload.new?.title || "seu anuncio";
-          if (status === "active" && payload.old?.status === "pending") {
-            showNotification(
-              "Anuncio aprovado! — AgroAluga",
-              `Seu anuncio "${title}" foi aprovado e esta ativo.`,
-              "/dashboard",
-              `listing-approved-${payload.new?.id}`
-            );
-          } else if (status === "rejected") {
-            showNotification(
-              "Anuncio rejeitado — AgroAluga",
-              `Seu anuncio "${title}" foi rejeitado. Acesse o dashboard para mais detalhes.`,
-              "/dashboard",
-              `listing-rejected-${payload.new?.id}`
-            );
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "revealed_contacts",
-          filter: `listing_owner_id=eq.${user.id}`,
-        },
-        (payload: any) => {
-          if (document.visibilityState === "visible") return;
-          showNotification(
-            "Novo contato revelado! — AgroAluga",
-            "Um cliente revelou seu contato. Aguarde o retorno!",
-            "/dashboard",
-            `contact-${payload.new?.id}`
-          );
-        }
-      )
-      .subscribe();
-  }
+  useEffect(() => {
+    initOneSignal();
+  }, []);
 
   useEffect(() => {
-    init();
+    if (!user) return;
+
+    // Associa o usuario ao OneSignal
+    if (window.OneSignal) {
+      window.OneSignal.login(user.id);
+    }
+
+    // Realtime para notificacoes locais (site aberto)
+    const ch = supabase.channel(`notifications-${user.id}`);
+
+    ch.on("postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` },
+      (payload: any) => {
+        if (document.visibilityState === "visible") return;
+        if ("Notification" in window && Notification.permission === "granted") {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification("Nova mensagem — AgroAluga", {
+              body: payload.new?.content?.substring(0, 80) || "Voce recebeu uma nova mensagem.",
+              icon: "/favicon.ico",
+              badge: "/favicon.ico",
+              tag: `msg-${payload.new?.id}`,
+              data: { url: "/mensagens" },
+            } as NotificationOptions);
+          });
+        }
+      }
+    );
+
+    ch.on("postgres_changes",
+      { event: "UPDATE", schema: "public", table: "listings", filter: `owner_id=eq.${user.id}` },
+      (payload: any) => {
+        const status = payload.new?.status;
+        const title = payload.new?.title || "seu anuncio";
+        let msg = "";
+        if (status === "active" && payload.old?.status === "pending") {
+          msg = `Seu anuncio "${title}" foi aprovado!`;
+        } else if (status === "rejected") {
+          msg = `Seu anuncio "${title}" foi rejeitado.`;
+        }
+        if (msg && "Notification" in window && Notification.permission === "granted") {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification("AgroAluga", {
+              body: msg,
+              icon: "/favicon.ico",
+              tag: `listing-${payload.new?.id}`,
+              data: { url: "/dashboard" },
+            } as NotificationOptions);
+          });
+        }
+      }
+    );
+
+    ch.subscribe();
+    channelRef.current = ch;
+
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
   }, [user]);
 
-  return { requestPermission };
+  return {};
 }
