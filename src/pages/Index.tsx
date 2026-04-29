@@ -54,25 +54,23 @@ export default function Index() {
     if (value.length < 2) { setCitySuggestions([]); return; }
     autocompleteTimer.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=6&addressdetails=1&countrycodes=br`;
-        const res = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
+        const res = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome");
         const data = await res.json();
-        const seen = new Set<string>();
-        const suggestions = data
-          .filter((d: any) => d.address?.city || d.address?.town || d.address?.village)
-          .map((d: any) => ({
-            label: [d.address?.city || d.address?.town || d.address?.village, d.address?.state].filter(Boolean).join(", "),
-            lat: parseFloat(d.lat),
-            lng: parseFloat(d.lon),
-          }))
-          .filter((s: any) => {
-            if (seen.has(s.label)) return false;
-            seen.add(s.label);
-            return true;
-          });
-        setCitySuggestions(suggestions);
+        const q = value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+        const matches = data
+          .filter((m: any) => {
+            const name = m.nome.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+            return name.startsWith(q);
+          })
+          .slice(0, 6)
+          .map((m: any) => ({
+            label: `${m.nome}, ${m.microrregiao?.mesorregiao?.UF?.sigla || ""}`,
+            nome: m.nome,
+            uf: m.microrregiao?.mesorregiao?.UF?.sigla || "",
+          }));
+        setCitySuggestions(matches);
       } catch { setCitySuggestions([]); }
-    }, 350);
+    }, 300);
   };
 
   const handleSelectCity = async (s: any) => {
@@ -82,7 +80,7 @@ export default function Index() {
     // Geocodificar a cidade selecionada
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(s.nome)}&state=${encodeURIComponent(s.uf)}&country=Brazil&format=json&limit=1`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(s.nome + ", " + s.uf + ", Brasil")}&format=json&limit=1&countrycodes=br`,
         { headers: { "Accept-Language": "pt-BR" } }
       );
       const data = await res.json();
