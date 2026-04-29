@@ -68,7 +68,10 @@ export function useNotifications() {
       { event: "INSERT", schema: "public", table: "messages" },
       (payload: any) => {
         if (payload.new?.sender_id === user.id) return;
-        if (document.visibilityState === "visible") return;
+        // Mostra notificacao se: site fechado, em outra aba, ou em outra pagina
+        const onMessagesPage = window.location.pathname === "/mensagens";
+        const siteVisible = document.visibilityState === "visible";
+        if (siteVisible && onMessagesPage) return;
         if ("Notification" in window && Notification.permission === "granted") {
           navigator.serviceWorker?.ready.then((reg) => {
             reg.showNotification("Nova mensagem — AgroAluga", {
