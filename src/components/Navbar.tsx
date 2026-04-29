@@ -90,7 +90,8 @@ export default function Navbar() {
               </Button>
             </Link>
           )}
-          {user ? (
+          <NotificationButton />
+            {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -195,7 +196,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {user ? (
+          <NotificationButton />
+            {user ? (
             <>
               <div className="border-t border-white/20 mt-3 pt-3 flex items-center gap-2 pb-2">
                 <UserAvatar userId={user.id} name={user.name} size="sm" />
