@@ -62,8 +62,16 @@ export default function MessagesPage() {
         table: "messages",
         filter: `conversation_id=eq.${selected.id}`,
       }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
+        const msg = payload.new as Message;
+        setMessages((prev) => [...prev, msg]);
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        // Marca como lida automaticamente se o destinatario esta na conversa
+        if (msg.sender_id !== user.id) {
+          supabase.from("messages").update({ read: true }).eq("id", msg.id);
+          setConversations(prev => prev.map(cv =>
+            cv.id === msg.conversation_id ? { ...cv, unreadCount: 0 } : cv
+          ));
+        }
       })
       .subscribe();
 
@@ -150,6 +158,7 @@ export default function MessagesPage() {
     if (user?.blocked) { alert("Sua conta está bloqueada e não pode enviar mensagens."); return; }
     const content = input.trim();
     setInput("");
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
     if (pendingNew) {
       const { data: conv, error } = await supabase
