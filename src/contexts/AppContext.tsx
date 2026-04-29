@@ -114,8 +114,6 @@ export const CATEGORIES = [...EQUIPMENT_CATEGORIES, ...SERVICE_CATEGORIES];
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
-const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 horas
-const INACTIVITY_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 horas de inatividade
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -125,8 +123,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reviews] = useState<Review[]>([]);
   const [revealedContacts, setRevealedContacts] = useState<string[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
-  const inactivityTimer = useRef<any>(null);
-  const sessionTimer = useRef<any>(null);
 
   // Log de acesso
   async function logSessionEvent(userId: string, event: string) {
@@ -148,44 +144,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {}
   }
 
-  // Resetar timer de inatividade
-  function resetInactivityTimer(userId: string) {
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    inactivityTimer.current = setTimeout(async () => {
-      await logSessionEvent(userId, "logout_inatividade");
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-    }, INACTIVITY_TIMEOUT_MS);
-  }
-
-  // Iniciar timer de sessao maxima (24h)
-  function startSessionTimer(userId: string, loginTime: number) {
-    if (sessionTimer.current) clearTimeout(sessionTimer.current);
-    const elapsed = Date.now() - loginTime;
-    const remaining = SESSION_TIMEOUT_MS - elapsed;
-    if (remaining <= 0) {
-      supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      return;
-    }
-    sessionTimer.current = setTimeout(async () => {
-      await logSessionEvent(userId, "logout_sessao_expirada");
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-    }, remaining);
-  }
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
         setUser(mapSupabaseUser(session.user));
         const loginTime = new Date(session.user.last_sign_in_at || Date.now()).getTime();
-        startSessionTimer(session.user.id, loginTime);
-        resetInactivityTimer(session.user.id);
       }
       setAuthLoading(false);
     });
@@ -196,26 +160,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setUser(mapSupabaseUser(session.user));
       } else {
         setUser(null);
-        if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-        if (sessionTimer.current) clearTimeout(sessionTimer.current);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-      if (sessionTimer.current) clearTimeout(sessionTimer.current);
-    };
+    return () => { subscription.unsubscribe(); };
   }, []);
-
-  // Monitorar atividade do usuario
-  useEffect(() => {
-    if (!user) return;
-    const events = ["mousedown", "keydown", "touchstart", "scroll"];
-    const handleActivity = () => resetInactivityTimer(user.id);
-    events.forEach(e => window.addEventListener(e, handleActivity, { passive: true }));
-    return () => events.forEach(e => window.removeEventListener(e, handleActivity));
-  }, [user]);
 
   useEffect(() => {
     fetchListings();
@@ -300,16 +249,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (data.user) {
       await logSessionEvent(data.user.id, "login");
       await enforceUniqueSession(data.user.id);
-      startSessionTimer(data.user.id, Date.now());
-      resetInactivityTimer(data.user.id);
     }
     return null;
   };
 
   const logout = async () => {
     if (user) await logSessionEvent(user.id, "logout_manual");
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    if (sessionTimer.current) clearTimeout(sessionTimer.current);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
