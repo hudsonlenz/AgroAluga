@@ -68,15 +68,21 @@ export function useNotifications() {
       { event: "INSERT", schema: "public", table: "messages" },
       (payload: any) => {
         if (payload.new?.sender_id === user.id) return;
-        // Mostra notificacao se: site fechado, em outra aba, ou em outra pagina
         const onMessagesPage = window.location.pathname === "/mensagens";
         const siteVisible = document.visibilityState === "visible";
         if (siteVisible && onMessagesPage) return;
         if ("Notification" in window && Notification.permission === "granted") {
+          // Busca nome do remetente
+          const { data: senderProfile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", payload.new?.sender_id)
+            .single();
+          const senderName = senderProfile?.name || "Alguem";
           navigator.serviceWorker?.ready.then((reg) => {
-            reg.showNotification("Nova mensagem — AgroAluga", {
+            reg.showNotification(`${senderName} enviou uma mensagem`, {
               body: payload.new?.content?.substring(0, 80) || "Nova mensagem recebida.",
-              icon: "/favicon.ico",
+              icon: "/AGROALUGA.png",
               tag: `msg-${payload.new?.id}`,
               data: { url: "/mensagens" },
             } as NotificationOptions);
