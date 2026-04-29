@@ -24,6 +24,7 @@ interface Conversation {
   created_at: string;
   listing?: { title: string; images: string[]; price: number; price_unit: string };
   other_user?: { id: string; name: string };
+  unreadCount?: number;
 }
 
 export default function MessagesPage() {
@@ -51,6 +52,7 @@ export default function MessagesPage() {
     if (!selected) return;
     fetchMessages(selected.id);
     markAsRead(selected.id);
+    setConversations(prev => prev.map(c => c.id === selected.id ? { ...c, unreadCount: 0 } : c));
 
     const channel = supabase
       .channel(`messages:${selected.id}`)
@@ -82,10 +84,23 @@ export default function MessagesPage() {
       .order("created_at", { ascending: false });
 
     if (data) {
+      // Busca contagem de nao lidas para cada conversa
+      const convIds = data.map((c: any) => c.id);
+      const { data: unreadData } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", convIds)
+        .neq("sender_id", user.id)
+        .or("read.eq.false,read.is.null");
+      const unreadMap: Record<string, number> = {};
+      (unreadData || []).forEach((m: any) => {
+        unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
+      });
       const convs = data.map((c: any) => ({
         ...c,
         listing: c.listing,
         other_user: user.id === c.buyer_id ? c.seller : c.buyer,
+        unreadCount: unreadMap[c.id] || 0,
       }));
       setConversations(convs);
 
@@ -207,10 +222,15 @@ export default function MessagesPage() {
                     src={conv.listing?.images?.[0] || "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=60&h=60&fit=crop"}
                     alt="" className="h-10 w-10 rounded-md object-cover shrink-0"
                   />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{conv.other_user?.name || "Usuario"}</p>
                     <p className="text-xs text-muted-foreground truncate">{conv.listing?.title}</p>
                   </div>
+                  {conv.unreadCount ? (
+                    <span className="shrink-0 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
+                    </span>
+                  ) : null}
                 </div>
               </button>
             ))}
