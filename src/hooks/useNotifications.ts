@@ -30,6 +30,20 @@ export function useNotifications() {
         appId: ONESIGNAL_APP_ID,
         serviceWorkerPath: "/OneSignalSDKWorker.js",
         notifyButton: { enable: false },
+        promptOptions: {
+          slidedown: {
+            prompts: [{
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "Ative as notificações para receber alertas de novas mensagens e atualizações dos seus anúncios no AgroAluga.",
+                acceptButton: "Ativar notificações",
+                cancelButton: "Agora não",
+              },
+              delay: { pageViews: 1, timeDelay: 8 },
+            }],
+          },
+        },
       });
     });
   }, []);
